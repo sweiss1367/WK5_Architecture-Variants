@@ -1,0 +1,86 @@
+{
+  "python": "3.13.16",
+  "platform": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "torch": "2.14.1+cu130",
+  "device": "cpu",
+  "cuda_available": false,
+  "cpu_count": 4
+}
+WARNING: no GPU found. Results below are from CPU and are not Colab GPU results.
+Example documents:
+[general_dry] BOL 9597 / DATE 07/04/25 / SHIPP ER MIDWEST WHSE ATLANTA GA / CONSIGNEE KEYSTONE TADING MEPHIS T / CARRIER BLUE RIDGE FREIGHT / 3RD PARTY / INSIDE DE LIVERY / NMFC 54732 / FREIGHT CLSS 65 / DESC LMBER  / STACKABLE / WT 19471 LB
+[retail_pallet] BOL  722203 DATE 08/06/25 SHIPP ER MIDWEST WHSE RENO NV CONSIGNEE BLUE RIDGE INDUSTRIE S COLUMBUS OH CARRIER BLUE RIDGE FREIGHT COLLECT DESC HOME TEXILES PALLET LABELS ATTACHED  LIFTGATE REQUIRED DELIVERY APPT REQUIRED WT 11559 LB
+[refrigerated] BOL 364476; ATE 03/01/25 ; SHIPER KEYSTONE ID U STRIES  RENO NV; CONSIGNE E HARBOR FOODSCOLUMBUS OH ; CARRIER MIDWESTFEIHT ; COLLECT   ; 15PLT ; WT 2011 LB ; REEFER ; DESC ICE CREAM ; EEFER  CONTIUO U ;SET TEMP  -20 C
+[fragile_high_value] BOL 819343 | DATE 04/21/25 | SHIPPER MIDWEST FOODS MEMPHIS TN | CONSIGNEE   PACIFIC WHSE RENO NV | CARRIER HARBORFREIGHT | PREPAID | DE S C MEDICAL DEVICES   | THIS SIDE UP | WT 6450 LB | FRAGILE | DEC LARED VALUE $259000 | 20 CTN
+[hazmat] BOL 973840 DATE 04/21/25 SHIPPER ATLAS FOODS RENO NV CONSIGNEE ATLAS MFG TAMPA FL CARRIER HARBOR FREIGHT PREPAID UN3480 11 DRM DO NOT STACK 24HR EMERGENCY CONTACT 435-602-1106 WT 17816 LB PLACARD REQUIRED DESC LITH IUM ION BATT ER
+[oversize_heavy] BOL 24757 | DATE 05/06/25 | SH IPPR ATLAS FOOD5 DALLA5 TX | CONSIGNEE ACME WHSE DENER CO | CARRIER ACME FREIGHT | PREPAID | WT 97080 LB | DESC PRECAST CONCRETE | PFRMIT 627348 | LIFTGATE REQUIRED | 1 PC | ESCORT REQUIRED
+
+class counts per split {'train': [3521, 2670, 2095, 1276, 472, 466], 'val': [510, 390, 300, 180, 60, 60], 'test': [1020, 780, 600, 360, 120, 120]}
+train label noise: 307 of 10500 labels flipped (2.92%); val/test labels are clean
+vocab size: 5565
+token stats: {
+ "train": {
+  "n_docs": 10500,
+  "mean_len": 43.58723809523809,
+  "max_len_before_trunc_cap": 70,
+  "pct_truncated": 0.0,
+  "nonpad_tokens": 457666
+ },
+ "val": {
+  "n_docs": 1500,
+  "mean_len": 43.326,
+  "max_len_before_trunc_cap": 69,
+  "pct_truncated": 0.0,
+  "nonpad_tokens": 64989
+ },
+ "test": {
+  "n_docs": 3000,
+  "mean_len": 43.673,
+  "max_len_before_trunc_cap": 72,
+  "pct_truncated": 0.0,
+  "nonpad_tokens": 131019
+ }
+}
+unk rate: {'train': 0.0552, 'val': 0.0637, 'test': 0.064}
+padding invariance: max |logit diff| = 5.96e-08 (cut to 57 of 128 positions)
+param counts: {'total': 1259654, 'embedding': 728704, 'non_embedding': 530950}
+  seed 0 epoch 1/8 train_loss 0.8361 val_acc 0.9720
+  seed 0 epoch 2/8 train_loss 0.2317 val_acc 0.9840
+  seed 0 epoch 3/8 train_loss 0.1903 val_acc 0.9767
+  seed 0 epoch 4/8 train_loss 0.1724 val_acc 0.9847
+  seed 0 epoch 5/8 train_loss 0.1517 val_acc 0.9867
+  seed 0 epoch 6/8 train_loss 0.1334 val_acc 0.9833
+  seed 0 epoch 7/8 train_loss 0.1124 val_acc 0.9747
+  seed 0 epoch 8/8 train_loss 0.0965 val_acc 0.9767
+seed 0: test acc 0.9750 | rare macro recall 0.9458 | 245s
+  seed 1 epoch 1/8 train_loss 0.8163 val_acc 0.9760
+  seed 1 epoch 2/8 train_loss 0.2361 val_acc 0.9827
+  seed 1 epoch 3/8 train_loss 0.1924 val_acc 0.9740
+  seed 1 epoch 4/8 train_loss 0.1697 val_acc 0.9827
+  seed 1 epoch 5/8 train_loss 0.1512 val_acc 0.9847
+  seed 1 epoch 6/8 train_loss 0.1320 val_acc 0.9793
+  seed 1 epoch 7/8 train_loss 0.1184 val_acc 0.9827
+  seed 1 epoch 8/8 train_loss 0.0966 val_acc 0.9800
+seed 1: test acc 0.9783 | rare macro recall 0.9667 | 246s
+  seed 2 epoch 1/8 train_loss 0.8317 val_acc 0.9727
+  seed 2 epoch 2/8 train_loss 0.2330 val_acc 0.9820
+  seed 2 epoch 3/8 train_loss 0.1929 val_acc 0.9860
+  seed 2 epoch 4/8 train_loss 0.1693 val_acc 0.9853
+  seed 2 epoch 5/8 train_loss 0.1493 val_acc 0.9887
+  seed 2 epoch 6/8 train_loss 0.1272 val_acc 0.9793
+  seed 2 epoch 7/8 train_loss 0.1083 val_acc 0.9800
+  seed 2 epoch 8/8 train_loss 0.0893 val_acc 0.9780
+seed 2: test acc 0.9757 | rare macro recall 0.9833 | 248s
+                          seed0   seed1   seed2    mean     std
+overall_acc              0.9750  0.9783  0.9757  0.9763  0.0018
+rare_class_recall_macro  0.9458  0.9667  0.9833  0.9653  0.0188
+acc_general_dry          0.9804  0.9824  0.9755  0.9794  0.0035
+acc_retail_pallet        0.9718  0.9769  0.9705  0.9731  0.0034
+acc_refrigerated         0.9833  0.9833  0.9750  0.9806  0.0048
+acc_fragile_high_value   0.9722  0.9694  0.9833  0.9750  0.0073
+acc_hazmat               0.9333  0.9417  0.9750  0.9500  0.0220
+acc_oversize_heavy       0.9583  0.9917  0.9917  0.9806  0.0192
+
+params (seed 0): {'total': 1259654, 'embedding': 728704, 'non_embedding': 530950}
+train seconds: [245, 246, 248]
+final val acc: [0.9767, 0.98, 0.978]
