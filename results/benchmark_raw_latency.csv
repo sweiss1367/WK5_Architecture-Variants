@@ -1,0 +1,501 @@
+configuration,run,trial,test_example_index,document_position,latency_ms
+FP32 baseline Transformer,1,1,1750,0,5.822117999969123
+FP32 baseline Transformer,1,2,98,1,5.491659999961485
+FP32 baseline Transformer,1,3,141,2,5.3220579999333495
+FP32 baseline Transformer,1,4,2106,3,4.940853999983119
+FP32 baseline Transformer,1,5,1242,4,5.127060000063466
+FP32 baseline Transformer,1,6,993,5,5.2486790000330075
+FP32 baseline Transformer,1,7,995,6,5.052497000065159
+FP32 baseline Transformer,1,8,663,7,5.246636000038052
+FP32 baseline Transformer,1,9,37,8,5.230170999993788
+FP32 baseline Transformer,1,10,4,9,5.107522999992398
+FP32 baseline Transformer,1,11,2311,10,5.029960000001665
+FP32 baseline Transformer,1,12,289,11,5.2383679999365995
+FP32 baseline Transformer,1,13,1130,12,5.229047000057108
+FP32 baseline Transformer,1,14,2589,13,5.283177000023898
+FP32 baseline Transformer,1,15,1868,14,5.201943000088249
+FP32 baseline Transformer,1,16,1296,15,5.181052000011732
+FP32 baseline Transformer,1,17,1144,16,5.267000999992888
+FP32 baseline Transformer,1,18,1881,17,5.374372999995103
+FP32 baseline Transformer,1,19,686,18,5.241001999934269
+FP32 baseline Transformer,1,20,1698,19,5.227560999969683
+FP32 baseline Transformer,1,21,2358,20,5.69066599996404
+FP32 baseline Transformer,1,22,1246,21,5.474982000009732
+FP32 baseline Transformer,1,23,1046,22,6.342391000089265
+FP32 baseline Transformer,1,24,399,23,6.490797999958886
+FP32 baseline Transformer,1,25,1263,24,5.2900729999691976
+FP32 baseline Transformer,1,26,2211,25,5.181977000006555
+FP32 baseline Transformer,1,27,1651,26,5.22229300008803
+FP32 baseline Transformer,1,28,2393,27,5.274898000038775
+FP32 baseline Transformer,1,29,692,28,5.147671999907288
+FP32 baseline Transformer,1,30,155,29,5.06766500006961
+FP32 baseline Transformer,1,31,1529,30,5.206820000012158
+FP32 baseline Transformer,1,32,1103,31,4.953174000092986
+FP32 baseline Transformer,1,33,2506,32,5.491365000011683
+FP32 baseline Transformer,1,34,1092,33,4.9501370000371026
+FP32 baseline Transformer,1,35,916,34,5.191023999941535
+FP32 baseline Transformer,1,36,2953,35,4.987138999922536
+FP32 baseline Transformer,1,37,2132,36,5.103026000028876
+FP32 baseline Transformer,1,38,1122,37,5.012203000092086
+FP32 baseline Transformer,1,39,1639,38,4.940156999964529
+FP32 baseline Transformer,1,40,1605,39,5.388706000076127
+FP32 baseline Transformer,1,41,1760,40,5.377807000058965
+FP32 baseline Transformer,1,42,1202,41,5.314365000003818
+FP32 baseline Transformer,1,43,1115,42,5.2356859999918015
+FP32 baseline Transformer,1,44,2660,43,5.303163000007771
+FP32 baseline Transformer,1,45,1170,44,5.154837999953088
+FP32 baseline Transformer,1,46,2387,45,5.157869000072424
+FP32 baseline Transformer,1,47,288,46,5.0071980000439
+FP32 baseline Transformer,1,48,1464,47,5.494357000088712
+FP32 baseline Transformer,1,49,2212,48,4.9032520000764634
+FP32 baseline Transformer,1,50,223,49,5.227700999967055
+FP32 baseline Transformer,1,51,2578,50,5.0695569999561485
+FP32 baseline Transformer,1,52,2884,51,5.186300999980631
+FP32 baseline Transformer,1,53,1610,52,5.3241839999600415
+FP32 baseline Transformer,1,54,1175,53,5.456448000018099
+FP32 baseline Transformer,1,55,1467,54,5.2565849999837155
+FP32 baseline Transformer,1,56,1757,55,5.082988000026489
+FP32 baseline Transformer,1,57,2114,56,5.083366999997452
+FP32 baseline Transformer,1,58,773,57,4.981024000016987
+FP32 baseline Transformer,1,59,470,58,5.52006700002039
+FP32 baseline Transformer,1,60,872,59,5.206058999988272
+FP32 baseline Transformer,1,61,2268,60,5.073114999959216
+FP32 baseline Transformer,1,62,2716,61,5.071029000077942
+FP32 baseline Transformer,1,63,2533,62,5.608502999962184
+FP32 baseline Transformer,1,64,464,63,4.969424000023537
+FP32 baseline Transformer,1,65,2672,64,4.987907999975505
+FP32 baseline Transformer,1,66,2055,65,4.9939269999867975
+FP32 baseline Transformer,1,67,173,66,6.085651000034886
+FP32 baseline Transformer,1,68,2936,67,5.053344999964793
+FP32 baseline Transformer,1,69,1925,68,5.0269770000568315
+FP32 baseline Transformer,1,70,2388,69,7.312381000019741
+FP32 baseline Transformer,1,71,1526,70,5.464899000003243
+FP32 baseline Transformer,1,72,886,71,5.301820999989104
+FP32 baseline Transformer,1,73,2478,72,4.971517999933894
+FP32 baseline Transformer,1,74,1825,73,5.157745000019531
+FP32 baseline Transformer,1,75,234,74,5.150969999931476
+FP32 baseline Transformer,1,76,83,75,5.607399000041369
+FP32 baseline Transformer,1,77,1634,76,5.110451999939869
+FP32 baseline Transformer,1,78,1332,77,5.13467199994011
+FP32 baseline Transformer,1,79,1784,78,4.973747999997613
+FP32 baseline Transformer,1,80,1301,79,5.165312999906746
+FP32 baseline Transformer,1,81,1924,80,5.255555000076129
+FP32 baseline Transformer,1,82,120,81,5.583648999959223
+FP32 baseline Transformer,1,83,661,82,5.262995999942177
+FP32 baseline Transformer,1,84,2325,83,5.086209000069175
+FP32 baseline Transformer,1,85,1999,84,4.896877999954086
+FP32 baseline Transformer,1,86,539,85,5.125374000044758
+FP32 baseline Transformer,1,87,367,86,5.003203000001122
+FP32 baseline Transformer,1,88,609,87,5.739285000004202
+FP32 baseline Transformer,1,89,378,88,5.618412999979228
+FP32 baseline Transformer,1,90,2037,89,5.558102999998482
+FP32 baseline Transformer,1,91,1356,90,5.197100000032151
+FP32 baseline Transformer,1,92,1693,91,5.5010479999282325
+FP32 baseline Transformer,1,93,337,92,5.347316999973373
+FP32 baseline Transformer,1,94,1597,93,5.477167999970334
+FP32 baseline Transformer,1,95,1265,94,5.004059000043526
+FP32 baseline Transformer,1,96,192,95,5.604718999961733
+FP32 baseline Transformer,1,97,2326,96,9.46218499996121
+FP32 baseline Transformer,1,98,1055,97,9.613227999921037
+FP32 baseline Transformer,1,99,2296,98,9.973850000051243
+FP32 baseline Transformer,1,100,1710,99,8.88077800004794
+FP32 linear-attention variant,1,1,1750,0,7.322863000013058
+FP32 linear-attention variant,1,2,98,1,7.514470000046458
+FP32 linear-attention variant,1,3,141,2,7.244571000001088
+FP32 linear-attention variant,1,4,2106,3,7.411406000073839
+FP32 linear-attention variant,1,5,1242,4,6.706011000005674
+FP32 linear-attention variant,1,6,993,5,7.434842999941793
+FP32 linear-attention variant,1,7,995,6,6.925410000008014
+FP32 linear-attention variant,1,8,663,7,6.835057999978744
+FP32 linear-attention variant,1,9,37,8,7.246850000001359
+FP32 linear-attention variant,1,10,4,9,6.830487999991419
+FP32 linear-attention variant,1,11,2311,10,7.221169999979793
+FP32 linear-attention variant,1,12,289,11,6.6887209999322295
+FP32 linear-attention variant,1,13,1130,12,6.723414000020966
+FP32 linear-attention variant,1,14,2589,13,6.61585099999229
+FP32 linear-attention variant,1,15,1868,14,6.738387000041257
+FP32 linear-attention variant,1,16,1296,15,7.245420000003833
+FP32 linear-attention variant,1,17,1144,16,7.677107000063188
+FP32 linear-attention variant,1,18,1881,17,7.594390999997813
+FP32 linear-attention variant,1,19,686,18,6.862343999955556
+FP32 linear-attention variant,1,20,1698,19,6.785635000028378
+FP32 linear-attention variant,1,21,2358,20,6.7387270000836
+FP32 linear-attention variant,1,22,1246,21,7.717312000067977
+FP32 linear-attention variant,1,23,1046,22,8.272249000015108
+FP32 linear-attention variant,1,24,399,23,7.236305999981596
+FP32 linear-attention variant,1,25,1263,24,6.965616000002228
+FP32 linear-attention variant,1,26,2211,25,7.17815099994823
+FP32 linear-attention variant,1,27,1651,26,6.944554000028802
+FP32 linear-attention variant,1,28,2393,27,7.043253999995613
+FP32 linear-attention variant,1,29,692,28,7.004144000006818
+FP32 linear-attention variant,1,30,155,29,7.261171999971339
+FP32 linear-attention variant,1,31,1529,30,7.351867000011225
+FP32 linear-attention variant,1,32,1103,31,6.864666000069519
+FP32 linear-attention variant,1,33,2506,32,6.702602000018487
+FP32 linear-attention variant,1,34,1092,33,7.178385000088383
+FP32 linear-attention variant,1,35,916,34,6.998144000021966
+FP32 linear-attention variant,1,36,2953,35,7.273252000004504
+FP32 linear-attention variant,1,37,2132,36,6.805606999932934
+FP32 linear-attention variant,1,38,1122,37,6.829541000001882
+FP32 linear-attention variant,1,39,1639,38,6.777571999919019
+FP32 linear-attention variant,1,40,1605,39,6.730542000013884
+FP32 linear-attention variant,1,41,1760,40,7.049422000022787
+FP32 linear-attention variant,1,42,1202,41,6.796608000058768
+FP32 linear-attention variant,1,43,1115,42,6.5797759999668415
+FP32 linear-attention variant,1,44,2660,43,7.217415000013716
+FP32 linear-attention variant,1,45,1170,44,7.05586799995217
+FP32 linear-attention variant,1,46,2387,45,6.924097000023721
+FP32 linear-attention variant,1,47,288,46,6.461409000053209
+FP32 linear-attention variant,1,48,1464,47,6.729038999992554
+FP32 linear-attention variant,1,49,2212,48,6.634901999973408
+FP32 linear-attention variant,1,50,223,49,7.029364000004534
+FP32 linear-attention variant,1,51,2578,50,6.613879000042289
+FP32 linear-attention variant,1,52,2884,51,6.644094999955996
+FP32 linear-attention variant,1,53,1610,52,6.881416000055651
+FP32 linear-attention variant,1,54,1175,53,6.974142999979449
+FP32 linear-attention variant,1,55,1467,54,6.937852999953975
+FP32 linear-attention variant,1,56,1757,55,6.623161999982585
+FP32 linear-attention variant,1,57,2114,56,7.158472000014626
+FP32 linear-attention variant,1,58,773,57,6.953313999929378
+FP32 linear-attention variant,1,59,470,58,6.974417000037647
+FP32 linear-attention variant,1,60,872,59,6.858796000074108
+FP32 linear-attention variant,1,61,2268,60,7.065836999913699
+FP32 linear-attention variant,1,62,2716,61,6.8923280000490195
+FP32 linear-attention variant,1,63,2533,62,6.732101000011426
+FP32 linear-attention variant,1,64,464,63,7.248281999977735
+FP32 linear-attention variant,1,65,2672,64,6.788652999944134
+FP32 linear-attention variant,1,66,2055,65,10.889226000017516
+FP32 linear-attention variant,1,67,173,66,11.841704000062236
+FP32 linear-attention variant,1,68,2936,67,9.01957099995343
+FP32 linear-attention variant,1,69,1925,68,10.753278000038335
+FP32 linear-attention variant,1,70,2388,69,7.375628999966466
+FP32 linear-attention variant,1,71,1526,70,7.085939000035069
+FP32 linear-attention variant,1,72,886,71,6.917186999999103
+FP32 linear-attention variant,1,73,2478,72,6.737409000038497
+FP32 linear-attention variant,1,74,1825,73,6.821924000064428
+FP32 linear-attention variant,1,75,234,74,6.963304999999309
+FP32 linear-attention variant,1,76,83,75,7.3432720000710106
+FP32 linear-attention variant,1,77,1634,76,6.806029000017588
+FP32 linear-attention variant,1,78,1332,77,6.787397000039164
+FP32 linear-attention variant,1,79,1784,78,7.012855999960266
+FP32 linear-attention variant,1,80,1301,79,6.893599000022732
+FP32 linear-attention variant,1,81,1924,80,6.78586499998346
+FP32 linear-attention variant,1,82,120,81,6.801384999903348
+FP32 linear-attention variant,1,83,661,82,7.251451000001907
+FP32 linear-attention variant,1,84,2325,83,6.698458999949253
+FP32 linear-attention variant,1,85,1999,84,6.9513500000084605
+FP32 linear-attention variant,1,86,539,85,7.010014000002229
+FP32 linear-attention variant,1,87,367,86,6.730715000003329
+FP32 linear-attention variant,1,88,609,87,6.881289000034485
+FP32 linear-attention variant,1,89,378,88,6.800096999995731
+FP32 linear-attention variant,1,90,2037,89,6.55849700001454
+FP32 linear-attention variant,1,91,1356,90,6.851412000060009
+FP32 linear-attention variant,1,92,1693,91,6.755898000051275
+FP32 linear-attention variant,1,93,337,92,8.605786999964948
+FP32 linear-attention variant,1,94,1597,93,7.02659399996719
+FP32 linear-attention variant,1,95,1265,94,6.741301000033673
+FP32 linear-attention variant,1,96,192,95,6.885045999979411
+FP32 linear-attention variant,1,97,2326,96,6.870491999961814
+FP32 linear-attention variant,1,98,1055,97,6.766028000015467
+FP32 linear-attention variant,1,99,2296,98,6.97788800005128
+FP32 linear-attention variant,1,100,1710,99,6.979446999935135
+INT8 hidden layers + FP32 head (bitsandbytes),1,1,1750,0,12.036019999982273
+INT8 hidden layers + FP32 head (bitsandbytes),1,2,98,1,11.446403000036298
+INT8 hidden layers + FP32 head (bitsandbytes),1,3,141,2,11.12240700001621
+INT8 hidden layers + FP32 head (bitsandbytes),1,4,2106,3,11.179324999943674
+INT8 hidden layers + FP32 head (bitsandbytes),1,5,1242,4,11.346355000000585
+INT8 hidden layers + FP32 head (bitsandbytes),1,6,993,5,10.97519799998281
+INT8 hidden layers + FP32 head (bitsandbytes),1,7,995,6,10.892761000036444
+INT8 hidden layers + FP32 head (bitsandbytes),1,8,663,7,11.341821999963031
+INT8 hidden layers + FP32 head (bitsandbytes),1,9,37,8,11.497122000037052
+INT8 hidden layers + FP32 head (bitsandbytes),1,10,4,9,11.699789999966015
+INT8 hidden layers + FP32 head (bitsandbytes),1,11,2311,10,11.770595999905709
+INT8 hidden layers + FP32 head (bitsandbytes),1,12,289,11,11.187254999981633
+INT8 hidden layers + FP32 head (bitsandbytes),1,13,1130,12,11.334809000004498
+INT8 hidden layers + FP32 head (bitsandbytes),1,14,2589,13,11.99949200008632
+INT8 hidden layers + FP32 head (bitsandbytes),1,15,1868,14,11.857997999982217
+INT8 hidden layers + FP32 head (bitsandbytes),1,16,1296,15,11.51412900003379
+INT8 hidden layers + FP32 head (bitsandbytes),1,17,1144,16,11.923756000101093
+INT8 hidden layers + FP32 head (bitsandbytes),1,18,1881,17,12.510561999988568
+INT8 hidden layers + FP32 head (bitsandbytes),1,19,686,18,11.57278099992709
+INT8 hidden layers + FP32 head (bitsandbytes),1,20,1698,19,11.294476999978542
+INT8 hidden layers + FP32 head (bitsandbytes),1,21,2358,20,11.654498999973839
+INT8 hidden layers + FP32 head (bitsandbytes),1,22,1246,21,12.067217999970126
+INT8 hidden layers + FP32 head (bitsandbytes),1,23,1046,22,11.73079200009397
+INT8 hidden layers + FP32 head (bitsandbytes),1,24,399,23,11.08891300009418
+INT8 hidden layers + FP32 head (bitsandbytes),1,25,1263,24,11.42447600000196
+INT8 hidden layers + FP32 head (bitsandbytes),1,26,2211,25,11.244071000078293
+INT8 hidden layers + FP32 head (bitsandbytes),1,27,1651,26,11.122580000005655
+INT8 hidden layers + FP32 head (bitsandbytes),1,28,2393,27,11.755225999991126
+INT8 hidden layers + FP32 head (bitsandbytes),1,29,692,28,11.849532999917756
+INT8 hidden layers + FP32 head (bitsandbytes),1,30,155,29,11.84925600000497
+INT8 hidden layers + FP32 head (bitsandbytes),1,31,1529,30,12.13711200000489
+INT8 hidden layers + FP32 head (bitsandbytes),1,32,1103,31,11.755026000059843
+INT8 hidden layers + FP32 head (bitsandbytes),1,33,2506,32,11.549644999945485
+INT8 hidden layers + FP32 head (bitsandbytes),1,34,1092,33,12.063009000030434
+INT8 hidden layers + FP32 head (bitsandbytes),1,35,916,34,12.062434999961624
+INT8 hidden layers + FP32 head (bitsandbytes),1,36,2953,35,11.535277999996651
+INT8 hidden layers + FP32 head (bitsandbytes),1,37,2132,36,11.92737600001692
+INT8 hidden layers + FP32 head (bitsandbytes),1,38,1122,37,13.402900000073714
+INT8 hidden layers + FP32 head (bitsandbytes),1,39,1639,38,12.149290000024848
+INT8 hidden layers + FP32 head (bitsandbytes),1,40,1605,39,11.169320000021798
+INT8 hidden layers + FP32 head (bitsandbytes),1,41,1760,40,11.274222999986705
+INT8 hidden layers + FP32 head (bitsandbytes),1,42,1202,41,11.619358999951146
+INT8 hidden layers + FP32 head (bitsandbytes),1,43,1115,42,11.643384999956652
+INT8 hidden layers + FP32 head (bitsandbytes),1,44,2660,43,11.349011999982395
+INT8 hidden layers + FP32 head (bitsandbytes),1,45,1170,44,11.188715000002958
+INT8 hidden layers + FP32 head (bitsandbytes),1,46,2387,45,11.669769000036467
+INT8 hidden layers + FP32 head (bitsandbytes),1,47,288,46,11.448866000023372
+INT8 hidden layers + FP32 head (bitsandbytes),1,48,1464,47,11.267072999999073
+INT8 hidden layers + FP32 head (bitsandbytes),1,49,2212,48,11.068030000046747
+INT8 hidden layers + FP32 head (bitsandbytes),1,50,223,49,11.45992900001147
+INT8 hidden layers + FP32 head (bitsandbytes),1,51,2578,50,11.627593000071101
+INT8 hidden layers + FP32 head (bitsandbytes),1,52,2884,51,11.34060699996553
+INT8 hidden layers + FP32 head (bitsandbytes),1,53,1610,52,11.607513000058134
+INT8 hidden layers + FP32 head (bitsandbytes),1,54,1175,53,11.700071000063872
+INT8 hidden layers + FP32 head (bitsandbytes),1,55,1467,54,11.134839999954238
+INT8 hidden layers + FP32 head (bitsandbytes),1,56,1757,55,11.638655000069775
+INT8 hidden layers + FP32 head (bitsandbytes),1,57,2114,56,11.346706000040285
+INT8 hidden layers + FP32 head (bitsandbytes),1,58,773,57,11.489149999988513
+INT8 hidden layers + FP32 head (bitsandbytes),1,59,470,58,11.132879999991019
+INT8 hidden layers + FP32 head (bitsandbytes),1,60,872,59,11.059538000040448
+INT8 hidden layers + FP32 head (bitsandbytes),1,61,2268,60,12.846971999920243
+INT8 hidden layers + FP32 head (bitsandbytes),1,62,2716,61,11.779617999991387
+INT8 hidden layers + FP32 head (bitsandbytes),1,63,2533,62,11.699772999918423
+INT8 hidden layers + FP32 head (bitsandbytes),1,64,464,63,11.312218999933066
+INT8 hidden layers + FP32 head (bitsandbytes),1,65,2672,64,11.745041000040146
+INT8 hidden layers + FP32 head (bitsandbytes),1,66,2055,65,11.459217000037825
+INT8 hidden layers + FP32 head (bitsandbytes),1,67,173,66,11.228337999909854
+INT8 hidden layers + FP32 head (bitsandbytes),1,68,2936,67,11.436640000056286
+INT8 hidden layers + FP32 head (bitsandbytes),1,69,1925,68,11.394342000016877
+INT8 hidden layers + FP32 head (bitsandbytes),1,70,2388,69,11.59446500003014
+INT8 hidden layers + FP32 head (bitsandbytes),1,71,1526,70,11.364676999960466
+INT8 hidden layers + FP32 head (bitsandbytes),1,72,886,71,11.14066900004218
+INT8 hidden layers + FP32 head (bitsandbytes),1,73,2478,72,10.919672999989416
+INT8 hidden layers + FP32 head (bitsandbytes),1,74,1825,73,11.522216000003027
+INT8 hidden layers + FP32 head (bitsandbytes),1,75,234,74,16.55340900003921
+INT8 hidden layers + FP32 head (bitsandbytes),1,76,83,75,13.2737570000927
+INT8 hidden layers + FP32 head (bitsandbytes),1,77,1634,76,11.05018700002347
+INT8 hidden layers + FP32 head (bitsandbytes),1,78,1332,77,11.211441000000377
+INT8 hidden layers + FP32 head (bitsandbytes),1,79,1784,78,11.159378999991532
+INT8 hidden layers + FP32 head (bitsandbytes),1,80,1301,79,11.204354000028616
+INT8 hidden layers + FP32 head (bitsandbytes),1,81,1924,80,11.377758999969956
+INT8 hidden layers + FP32 head (bitsandbytes),1,82,120,81,11.250912000036806
+INT8 hidden layers + FP32 head (bitsandbytes),1,83,661,82,13.47663100000318
+INT8 hidden layers + FP32 head (bitsandbytes),1,84,2325,83,17.383112000061374
+INT8 hidden layers + FP32 head (bitsandbytes),1,85,1999,84,15.196811999999227
+INT8 hidden layers + FP32 head (bitsandbytes),1,86,539,85,11.643655000057151
+INT8 hidden layers + FP32 head (bitsandbytes),1,87,367,86,11.342179000052965
+INT8 hidden layers + FP32 head (bitsandbytes),1,88,609,87,11.342221999939284
+INT8 hidden layers + FP32 head (bitsandbytes),1,89,378,88,11.263880000001336
+INT8 hidden layers + FP32 head (bitsandbytes),1,90,2037,89,11.863754999922094
+INT8 hidden layers + FP32 head (bitsandbytes),1,91,1356,90,11.212103000048046
+INT8 hidden layers + FP32 head (bitsandbytes),1,92,1693,91,11.110583000004226
+INT8 hidden layers + FP32 head (bitsandbytes),1,93,337,92,11.524219000079938
+INT8 hidden layers + FP32 head (bitsandbytes),1,94,1597,93,11.219263000043611
+INT8 hidden layers + FP32 head (bitsandbytes),1,95,1265,94,11.835819999987507
+INT8 hidden layers + FP32 head (bitsandbytes),1,96,192,95,11.394505999987814
+INT8 hidden layers + FP32 head (bitsandbytes),1,97,2326,96,11.288675999935549
+INT8 hidden layers + FP32 head (bitsandbytes),1,98,1055,97,11.318436999999903
+INT8 hidden layers + FP32 head (bitsandbytes),1,99,2296,98,11.552735000009307
+INT8 hidden layers + FP32 head (bitsandbytes),1,100,1710,99,12.773313000025155
+FP32 distilled student,1,1,1750,0,3.074563000041053
+FP32 distilled student,1,2,98,1,3.3715179999944667
+FP32 distilled student,1,3,141,2,3.009967999901164
+FP32 distilled student,1,4,2106,3,3.047938999998223
+FP32 distilled student,1,5,1242,4,2.7412579999008813
+FP32 distilled student,1,6,993,5,3.010817000017596
+FP32 distilled student,1,7,995,6,2.7702859999862994
+FP32 distilled student,1,8,663,7,3.0324299999620052
+FP32 distilled student,1,9,37,8,2.6822309999943172
+FP32 distilled student,1,10,4,9,2.86065399996005
+FP32 distilled student,1,11,2311,10,2.766291999932946
+FP32 distilled student,1,12,289,11,2.830557000038425
+FP32 distilled student,1,13,1130,12,3.2135069999412735
+FP32 distilled student,1,14,2589,13,2.987181000094097
+FP32 distilled student,1,15,1868,14,3.12813699997605
+FP32 distilled student,1,16,1296,15,2.6684069999873827
+FP32 distilled student,1,17,1144,16,2.632465000033335
+FP32 distilled student,1,18,1881,17,2.638855999975931
+FP32 distilled student,1,19,686,18,2.6736030000620303
+FP32 distilled student,1,20,1698,19,2.663525999992089
+FP32 distilled student,1,21,2358,20,2.970204999996895
+FP32 distilled student,1,22,1246,21,2.8016280000429106
+FP32 distilled student,1,23,1046,22,2.6431569999658677
+FP32 distilled student,1,24,399,23,2.843299999994997
+FP32 distilled student,1,25,1263,24,3.055256000038753
+FP32 distilled student,1,26,2211,25,2.8649460000451654
+FP32 distilled student,1,27,1651,26,2.7769360000320376
+FP32 distilled student,1,28,2393,27,2.726978000055169
+FP32 distilled student,1,29,692,28,2.8505090000408018
+FP32 distilled student,1,30,155,29,2.888161999976546
+FP32 distilled student,1,31,1529,30,3.133161000050677
+FP32 distilled student,1,32,1103,31,2.849262999916391
+FP32 distilled student,1,33,2506,32,2.6529900000014095
+FP32 distilled student,1,34,1092,33,3.0015919999186735
+FP32 distilled student,1,35,916,34,2.905900999962796
+FP32 distilled student,1,36,2953,35,2.9595849999850543
+FP32 distilled student,1,37,2132,36,2.9636640000489933
+FP32 distilled student,1,38,1122,37,2.8476719999162015
+FP32 distilled student,1,39,1639,38,2.7620529999694554
+FP32 distilled student,1,40,1605,39,2.619098999957714
+FP32 distilled student,1,41,1760,40,2.7461280000125043
+FP32 distilled student,1,42,1202,41,2.734309999937068
+FP32 distilled student,1,43,1115,42,2.8690350000033504
+FP32 distilled student,1,44,2660,43,2.771385999949416
+FP32 distilled student,1,45,1170,44,2.8265879999480603
+FP32 distilled student,1,46,2387,45,2.771224999946753
+FP32 distilled student,1,47,288,46,2.7082670000027065
+FP32 distilled student,1,48,1464,47,2.777995000087685
+FP32 distilled student,1,49,2212,48,3.008559000022615
+FP32 distilled student,1,50,223,49,3.4166650000315713
+FP32 distilled student,1,51,2578,50,3.2702319999771134
+FP32 distilled student,1,52,2884,51,3.269086000045718
+FP32 distilled student,1,53,1610,52,4.298456000014994
+FP32 distilled student,1,54,1175,53,4.527424999992036
+FP32 distilled student,1,55,1467,54,4.515925000077914
+FP32 distilled student,1,56,1757,55,4.112925999947947
+FP32 distilled student,1,57,2114,56,2.9955060000474987
+FP32 distilled student,1,58,773,57,2.908292000029178
+FP32 distilled student,1,59,470,58,2.860780999981216
+FP32 distilled student,1,60,872,59,2.8028159999848867
+FP32 distilled student,1,61,2268,60,2.8080790000331035
+FP32 distilled student,1,62,2716,61,2.9016619999993054
+FP32 distilled student,1,63,2533,62,2.843127000005552
+FP32 distilled student,1,64,464,63,3.0606640000314655
+FP32 distilled student,1,65,2672,64,2.83192599999893
+FP32 distilled student,1,66,2055,65,2.8825239999150654
+FP32 distilled student,1,67,173,66,2.7476239999941754
+FP32 distilled student,1,68,2936,67,2.634639000007155
+FP32 distilled student,1,69,1925,68,2.7613169999085585
+FP32 distilled student,1,70,2388,69,2.805521000027511
+FP32 distilled student,1,71,1526,70,3.1673090001049786
+FP32 distilled student,1,72,886,71,2.6791540000203895
+FP32 distilled student,1,73,2478,72,2.794069999936255
+FP32 distilled student,1,74,1825,73,2.827656999897954
+FP32 distilled student,1,75,234,74,2.9067899999972724
+FP32 distilled student,1,76,83,75,3.343712999935633
+FP32 distilled student,1,77,1634,76,3.004702999987785
+FP32 distilled student,1,78,1332,77,2.8012579999767695
+FP32 distilled student,1,79,1784,78,2.7868870000702373
+FP32 distilled student,1,80,1301,79,3.0421970000134024
+FP32 distilled student,1,81,1924,80,2.734718000056091
+FP32 distilled student,1,82,120,81,3.0282870000064577
+FP32 distilled student,1,83,661,82,2.7604169999904116
+FP32 distilled student,1,84,2325,83,2.8882000000294283
+FP32 distilled student,1,85,1999,84,2.8740420000303857
+FP32 distilled student,1,86,539,85,2.7879140000095504
+FP32 distilled student,1,87,367,86,2.731471000060992
+FP32 distilled student,1,88,609,87,2.7609249999613894
+FP32 distilled student,1,89,378,88,2.7577060000112397
+FP32 distilled student,1,90,2037,89,2.766382999993766
+FP32 distilled student,1,91,1356,90,2.8010220000851405
+FP32 distilled student,1,92,1693,91,2.875018000054297
+FP32 distilled student,1,93,337,92,2.9452659999833486
+FP32 distilled student,1,94,1597,93,2.684667999915291
+FP32 distilled student,1,95,1265,94,3.247015000056308
+FP32 distilled student,1,96,192,95,2.832087000001593
+FP32 distilled student,1,97,2326,96,2.706267000007756
+FP32 distilled student,1,98,1055,97,2.879678999988755
+FP32 distilled student,1,99,2296,98,2.736344000027202
+FP32 distilled student,1,100,1710,99,2.856004000022949
+FP32 baseline Transformer,2,1,1750,0,5.030443999999079
+FP32 baseline Transformer,2,2,98,1,5.012764000071002
+FP32 baseline Transformer,2,3,141,2,4.99349499989421
+FP32 baseline Transformer,2,4,2106,3,6.743894999999611
+FP32 baseline Transformer,2,5,1242,4,7.8329310000526675
+FP32 baseline Transformer,2,6,993,5,7.545520999997279
+FP32 baseline Transformer,2,7,995,6,5.586880000009842
+FP32 baseline Transformer,2,8,663,7,4.9437320000151885
+FP32 baseline Transformer,2,9,37,8,4.856914000015422
+FP32 baseline Transformer,2,10,4,9,4.700397000078738
+FP32 baseline Transformer,2,11,2311,10,4.752458999973896
+FP32 baseline Transformer,2,12,289,11,4.9149440000064715
+FP32 baseline Transformer,2,13,1130,12,4.838406999965628
+FP32 baseline Transformer,2,14,2589,13,4.9068719999922905
+FP32 baseline Transformer,2,15,1868,14,4.7303210000109175
+FP32 baseline Transformer,2,16,1296,15,4.805480000072748
+FP32 baseline Transformer,2,17,1144,16,4.759998000054111
+FP32 baseline Transformer,2,18,1881,17,4.970961000026364
+FP32 baseline Transformer,2,19,686,18,5.187062999993941
+FP32 baseline Transformer,2,20,1698,19,5.438163999997414
+FP32 baseline Transformer,2,21,2358,20,4.993363999915346
+FP32 baseline Transformer,2,22,1246,21,5.054075000089142
+FP32 baseline Transformer,2,23,1046,22,4.957841999953416
+FP32 baseline Transformer,2,24,399,23,4.916896000054294
+FP32 baseline Transformer,2,25,1263,24,4.849612000043635
+FP32 baseline Transformer,2,26,2211,25,4.773508000084803
+FP32 baseline Transformer,2,27,1651,26,4.967832000033923
+FP32 baseline Transformer,2,28,2393,27,4.872485000078086
+FP32 baseline Transformer,2,29,692,28,4.76528900003359
+FP32 baseline Transformer,2,30,155,29,5.355258999998114
+FP32 baseline Transformer,2,31,1529,30,5.239073999973698
+FP32 baseline Transformer,2,32,1103,31,5.089902000008806
+FP32 baseline Transformer,2,33,2506,32,4.6691969999983485
+FP32 baseline Transformer,2,34,1092,33,4.673991999993632
+FP32 baseline Transformer,2,35,916,34,4.917685000009442
+FP32 baseline Transformer,2,36,2953,35,5.186660999925152
+FP32 baseline Transformer,2,37,2132,36,5.201294000016787
+FP32 baseline Transformer,2,38,1122,37,4.810114000065369
+FP32 baseline Transformer,2,39,1639,38,4.881683000007797
+FP32 baseline Transformer,2,40,1605,39,5.049096000107056
+FP32 baseline Transformer,2,41,1760,40,5.019213999958083
+FP32 baseline Transformer,2,42,1202,41,8.423084000014569
+FP32 baseline Transformer,2,43,1115,42,9.00364200003878
+FP32 baseline Transformer,2,44,2660,43,9.176203000038186
+FP32 baseline Transformer,2,45,1170,44,7.091406999961691
+FP32 baseline Transformer,2,46,2387,45,5.286218000037479
+FP32 baseline Transformer,2,47,288,46,5.102743000065857
+FP32 baseline Transformer,2,48,1464,47,4.856710000012754
+FP32 baseline Transformer,2,49,2212,48,4.82103100000586
+FP32 baseline Transformer,2,50,223,49,5.2112560000523445
+FP32 baseline Transformer,2,51,2578,50,5.33018400005858
+FP32 baseline Transformer,2,52,2884,51,4.650846999993519
+FP32 baseline Transformer,2,53,1610,52,4.933630999971683
+FP32 baseline Transformer,2,54,1175,53,4.922354999962408
+FP32 baseline Transformer,2,55,1467,54,4.680599000039365
+FP32 baseline Transformer,2,56,1757,55,4.868203000000904
+FP32 baseline Transformer,2,57,2114,56,5.068685999958689
+FP32 baseline Transformer,2,58,773,57,4.922013000054903
+FP32 baseline Transformer,2,59,470,58,5.05882900006327
+FP32 baseline Transformer,2,60,872,59,4.939626000009412
+FP32 baseline Transformer,2,61,2268,60,4.894843999977638
+FP32 baseline Transformer,2,62,2716,61,5.35592699998233
+FP32 baseline Transformer,2,63,2533,62,5.541395000022931
+FP32 baseline Transformer,2,64,464,63,5.482463000021198
+FP32 baseline Transformer,2,65,2672,64,5.0554839999676915
+FP32 baseline Transformer,2,66,2055,65,4.874190000009548
+FP32 baseline Transformer,2,67,173,66,4.896867999946153
+FP32 baseline Transformer,2,68,2936,67,5.267284999945332
+FP32 baseline Transformer,2,69,1925,68,5.151177000016105
+FP32 baseline Transformer,2,70,2388,69,4.853775000015048
+FP32 baseline Transformer,2,71,1526,70,4.780571999958738
+FP32 baseline Transformer,2,72,886,71,4.683682999939265
+FP32 baseline Transformer,2,73,2478,72,5.136547999995855
+FP32 baseline Transformer,2,74,1825,73,4.6863100000109625
+FP32 baseline Transformer,2,75,234,74,5.292747999988023
+FP32 baseline Transformer,2,76,83,75,4.777409999974225
+FP32 baseline Transformer,2,77,1634,76,4.879929999901833
+FP32 baseline Transformer,2,78,1332,77,4.9196100000017395
+FP32 baseline Transformer,2,79,1784,78,5.512183000064397
+FP32 baseline Transformer,2,80,1301,79,5.1321430000825785
+FP32 baseline Transformer,2,81,1924,80,4.81195600002593
+FP32 baseline Transformer,2,82,120,81,4.856882000012774
+FP32 baseline Transformer,2,83,661,82,4.667691000008745
+FP32 baseline Transformer,2,84,2325,83,5.190255000002253
+FP32 baseline Transformer,2,85,1999,84,6.266826000000947
+FP32 baseline Transformer,2,86,539,85,4.922532999898976
+FP32 baseline Transformer,2,87,367,86,4.8551549999729104
+FP32 baseline Transformer,2,88,609,87,4.7210390000600455
+FP32 baseline Transformer,2,89,378,88,4.9615909999829455
+FP32 baseline Transformer,2,90,2037,89,4.935358000011547
+FP32 baseline Transformer,2,91,1356,90,4.705930999989505
+FP32 baseline Transformer,2,92,1693,91,4.837932999976147
+FP32 baseline Transformer,2,93,337,92,4.96710700008407
+FP32 baseline Transformer,2,94,1597,93,4.836246000081701
+FP32 baseline Transformer,2,95,1265,94,5.2958119999857445
+FP32 baseline Transformer,2,96,192,95,4.732669999953032
+FP32 baseline Transformer,2,97,2326,96,5.425108000054024
+FP32 baseline Transformer,2,98,1055,97,5.104551000044921
+FP32 baseline Transformer,2,99,2296,98,4.761044000019865
+FP32 baseline Transformer,2,100,1710,99,4.979445999993004
