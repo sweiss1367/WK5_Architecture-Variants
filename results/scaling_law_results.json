@@ -1,0 +1,104 @@
+{
+ "formulas": {
+  "actual": "C = 6 * N * D, D = padded sequence positions processed (docs x 128 x epochs)",
+  "compute_optimal": "D_opt = 20 N; C_opt = 6 N D_opt",
+  "projection": "N_10x = 10 N; D_10x = 20 N_10x; C_10x = 6 N_10x D_10x; multiple = C_10x / C_opt",
+  "N": "non-embedding parameters; total parameters are context only"
+ },
+ "workload": {
+  "train_docs": 10500,
+  "seq_len": 128,
+  "epochs": 8,
+  "padded_positions": 10752000,
+  "non_padding_tokens": 3661328
+ },
+ "input_files": [
+  "baseline_results_cuda.json",
+  "linear_results_cuda.json",
+  "int8_mixed_results_cuda.json",
+  "student_results_cuda.json"
+ ],
+ "teacher_cost": {
+  "measured_logit_cache_seconds_per_seed": [
+   1.2,
+   1.2,
+   1.3
+  ],
+  "cache_positions": 1536000,
+  "forward_only_2ND_estimate_flops_per_seed": 1631078400000,
+  "included_in_student_C": false
+ },
+ "rows": [
+  {
+   "Configuration": "FP32 baseline Transformer",
+   "Total Parameters": 1259654,
+   "Non-Embedding Parameters N": 530950,
+   "Actual Training Tokens": 10752000,
+   "Estimated Actual Training FLOPs": 34252646400000,
+   "Compute-Optimal Tokens 20N": 10619000,
+   "Compute-Optimal Training FLOPs": 33828948300000,
+   "10x Non-Embedding Parameters": 5309500,
+   "10x Compute-Optimal Tokens": 106190000,
+   "10x Training FLOPs": 3382894830000000,
+   "Compute Multiple": 100.0,
+   "Notes": "Actual D = padded positions (10,752,000); actual D is 1.01x the compute-optimal D (counts 8 repeated epochs)."
+  },
+  {
+   "Configuration": "FP32 linear-attention variant",
+   "Total Parameters": 1259654,
+   "Non-Embedding Parameters N": 530950,
+   "Actual Training Tokens": 10752000,
+   "Estimated Actual Training FLOPs": 34252646400000,
+   "Compute-Optimal Tokens 20N": 10619000,
+   "Compute-Optimal Training FLOPs": 33828948300000,
+   "10x Non-Embedding Parameters": 5309500,
+   "10x Compute-Optimal Tokens": 106190000,
+   "10x Training FLOPs": 3382894830000000,
+   "Compute Multiple": 100.0,
+   "Notes": "Same N and same training workload as the baseline, so identical 6ND values. 6ND does not capture linear attention's different attention cost."
+  },
+  {
+   "Configuration": "Mixed-precision INT8 baseline (INT8 hidden layers + FP32 head)",
+   "Total Parameters": 1259654,
+   "Non-Embedding Parameters N": 530950,
+   "Actual Training Tokens": 10752000,
+   "Estimated Actual Training FLOPs": 34252646400000,
+   "Compute-Optimal Tokens 20N": 10619000,
+   "Compute-Optimal Training FLOPs": 33828948300000,
+   "10x Non-Embedding Parameters": 5309500,
+   "10x Compute-Optimal Tokens": 106190000,
+   "10x Training FLOPs": 3382894830000000,
+   "Compute Multiple": 100.0,
+   "Notes": "Post-training INT8 quantization of the trained FP32 baseline: training compute is the baseline's own (not reduced by INT8 storage). Quantization changes the inference representation, not the original training compute. Projection rows refer to the underlying baseline architecture."
+  },
+  {
+   "Configuration": "FP32 distilled student",
+   "Total Parameters": 431814,
+   "Non-Embedding Parameters N": 67462,
+   "Actual Training Tokens": 10752000,
+   "Estimated Actual Training FLOPs": 4352108544000,
+   "Compute-Optimal Tokens 20N": 1349240,
+   "Compute-Optimal Training FLOPs": 546134573280,
+   "10x Non-Embedding Parameters": 674620,
+   "10x Compute-Optimal Tokens": 13492400,
+   "10x Training FLOPs": 54613457328000,
+   "Compute Multiple": 100.0,
+   "Notes": "Student's own 6ND only. Excludes teacher inference for soft targets and the cost of training the teacher first (see the baseline row). Actual D is 7.97x its compute-optimal D."
+  }
+ ],
+ "limitations": [
+  "The 10x figures are formula-based projections, not measured training runs.",
+  "GPU utilization can change as model size increases.",
+  "Larger matrix multiplications may use the hardware more efficiently, so FLOPs would not translate linearly into wall-clock time.",
+  "A 10x larger model may exceed single-GPU memory.",
+  "Gradient checkpointing or smaller batches may be required, and those changes could alter wall-clock time.",
+  "Longer context lengths would change attention cost, which 6ND does not model.",
+  "Multi-GPU execution would introduce communication overhead.",
+  "The Chinchilla-style 20-tokens-per-parameter relationship is a rule of thumb, not a guarantee for this synthetic classification workload.",
+  "INT8 inference storage does not reduce the historical FP32 training cost.",
+  "Distillation has additional teacher-inference cost that the student's basic 6ND estimate does not capture.",
+  "Actual D counts 8 repeated epochs over the same documents; it is not a count of unique tokens.",
+  "Scaling-law figures are not used to rank the models."
+ ],
+ "generation_note": "Computed in a sandbox by running the notebook's Part 6 cell on inputs built from the exact values printed in the executed Colab notebooks (parameter counts, 10,500 training documents, 457,666 non-padding tokens per epoch, 8 epochs, sequence length 128, class counts). Teacher-logit caching seconds are the values printed to one decimal (1.2, 1.2, 1.3), not the unrounded JSON values. Running the Part 6 cell in Colab recomputes everything from the saved results JSON files."
+}
