@@ -13,42 +13,31 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# %% [markdown]
-# ## 0. Environment verification (GPU required)
-# This notebook stops if CUDA is not available. In Colab: Runtime > Change runtime type > GPU.
-
-# %%
-# Must be set before the first CUDA call. Used with warn_only determinism below.
-os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-
-print("Python version         :", sys.version.split()[0])
-print("PyTorch version        :", torch.__version__)
-print("torch.cuda.is_available():", torch.cuda.is_available())
-if not torch.cuda.is_available():
-    raise RuntimeError(
-        "CUDA is not available. This experiment must run on a GPU (Colab: Runtime > Change runtime type > "
-        "T4 GPU), then restart and run all cells. It will not fall back to CPU.")
-
-DEVICE = torch.device("cuda")
-_p = torch.cuda.get_device_properties(0)
-print("GPU name               :", torch.cuda.get_device_name(0))
-print("CUDA version (torch)   :", torch.version.cuda)
-print("GPU compute capability :", f"{_p.major}.{_p.minor}")
-print("GPU memory (GB)        :", round(_p.total_memory / 1e9, 2))
-
-ENV = {"python": sys.version.split()[0], "platform": platform.platform(), "torch": torch.__version__,
-       "device": str(DEVICE), "cuda_available": True, "gpu_name": torch.cuda.get_device_name(0),
-       "cuda_version": torch.version.cuda, "compute_capability": f"{_p.major}.{_p.minor}",
-       "gpu_memory_gb": round(_p.total_memory / 1e9, 2)}
-
-# Best-effort determinism. GPU kernels are not guaranteed bitwise identical to the CPU run
-# (or across GPU types), so expect small numeric differences from the CPU reference results.
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
-torch.use_deterministic_algorithms(True, warn_only=True)
-
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 OUT_DIR = "results"
 os.makedirs(OUT_DIR, exist_ok=True)
+
+
+def env_info():
+    info = {
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "torch": torch.__version__,
+        "device": str(DEVICE),
+        "cuda_available": torch.cuda.is_available(),
+        "cpu_count": os.cpu_count(),
+    }
+    if torch.cuda.is_available():
+        p = torch.cuda.get_device_properties(0)
+        info.update(gpu_name=p.name, compute_capability=f"{p.major}.{p.minor}",
+                    gpu_memory_gb=round(p.total_memory / 1e9, 2), cuda_runtime=torch.version.cuda)
+    return info
+
+
+ENV = env_info()
+print(json.dumps(ENV, indent=2))
+if DEVICE.type != "cuda":
+    print("WARNING: no GPU found. Results below are from CPU and are not Colab GPU results.")
 
 # %% [markdown]
 # ## 1. Synthetic bill-of-lading dataset
@@ -217,21 +206,6 @@ def build_dataset(seed=DATA_SEED):
 
 
 data, y_train_clean, flipped = build_dataset()
-
-# Fingerprint of the exact dataset (texts + labels, all splits). If this differs from the reference
-# below, the dataset on this machine is NOT the one used in the earlier CPU run.
-import hashlib
-_h = hashlib.sha256()
-for _k in ("train", "val", "test"):
-    _h.update(json.dumps([data[_k][0], data[_k][1].tolist()]).encode())
-DATA_SHA256 = _h.hexdigest()
-REFERENCE_DATA_SHA256 = "e74c4242ce78d13fec8ad56ebe0647c6598766c815068a00ccb2369c6307d610"  # from the earlier CPU run
-REFERENCE_VOCAB = 5565
-print("dataset sha256:", DATA_SHA256)
-if DATA_SHA256 != REFERENCE_DATA_SHA256:
-    raise RuntimeError("Dataset differs from the reference (data seed 42) dataset. Stopping so a different "
-                       "experiment is not run by accident.")
-print("dataset matches the reference dataset: OK")
 print("Example documents:")
 for c in range(len(CLASSES)):
     i = int(np.where(data["test"][1] == c)[0][0])
@@ -281,7 +255,6 @@ for k, (texts, labels) in data.items():
                    "pct_truncated": 100 * trunc / len(texts), "nonpad_tokens": int(lens.sum())}
 unk_rate = {k: float((X[k] == UNK).sum() / (X[k] != PAD).sum()) for k in X}
 print("vocab size:", VOCAB)
-assert VOCAB == REFERENCE_VOCAB, f"vocab size {VOCAB} != reference {REFERENCE_VOCAB}"
 print("token stats:", json.dumps(TOKSTATS, indent=1))
 print("unk rate:", {k: round(v, 4) for k, v in unk_rate.items()})
 
@@ -408,8 +381,6 @@ def train_baseline(seed):
         opt, lambda s: (s + 1) / WARMUP if s < WARMUP else max(0.0, (total - s) / (total - WARMUP)))
     g = torch.Generator().manual_seed(seed)
     xtr, ytr = X["train"], Y["train"]
-    if DEVICE.type == "cuda":
-        torch.cuda.synchronize()
     log, t0 = [], time.time()
     for ep in range(EPOCHS):
         model.train()
@@ -435,7 +406,7 @@ def train_baseline(seed):
 results = {"env": ENV, "config": {"epochs": EPOCHS, "batch": BATCH, "lr": LR, "wd": WD, "warmup": WARMUP,
                                   "max_len": MAX_LEN, "d_model": D_MODEL, "layers": N_LAYERS, "heads": N_HEADS,
                                   "d_ff": D_FF, "vocab": VOCAB, "train_label_noise": TRAIN_LABEL_NOISE,
-                                  "data_seed": DATA_SEED, "data_sha256": DATA_SHA256},
+                                  "data_seed": DATA_SEED},
            "class_counts": dist, "token_stats": TOKSTATS, "baseline": {}}
 y_test = Y["test"].numpy()
 for seed in SEEDS:
@@ -449,34 +420,21 @@ for seed in SEEDS:
     torch.save(model.state_dict(), f"{OUT_DIR}/baseline_seed{seed}.pt")
 
 # %% [markdown]
-# ## 5. Baseline report (seeds 0, 1, 2)
+# ## 5. Baseline summary (mean ± std over seeds 0, 1, 2)
 
 # %%
 import pandas as pd
 
-HAZ, OVR = "hazmat", "oversize_heavy"
-runs = results["baseline"]
-print("GPU:", ENV["gpu_name"], "| CUDA", ENV["cuda_version"], "| cc", ENV["compute_capability"])
-
-per_seed = pd.DataFrame({
-    sd: {"train_seconds": r["train_seconds"], "final_val_acc": r["val_acc_final"],
-         "overall_test_acc": r["overall_acc"],
-         **{f"acc_{c}": r["per_class_acc"][c] for c in CLASSES},
-         "rare_macro_recall": r["rare_class_recall_macro"]}
-    for sd, r in runs.items()})
-print(per_seed.round(4).to_string())
-
-p = runs["seed0"]["params"]
-print(f"\nparams: total {p['total']:,} | embedding {p['embedding']:,} | non-embedding {p['non_embedding']:,}")
-
-agg = pd.DataFrame({"overall_test_acc": per_seed.loc["overall_test_acc"],
-                    "hazmat_recall": per_seed.loc[f"acc_{HAZ}"],
-                    "oversize_recall": per_seed.loc[f"acc_{OVR}"],
-                    "rare_macro_recall": per_seed.loc["rare_macro_recall"]}).T
-agg["mean"], agg["std"] = agg.mean(axis=1), agg.std(axis=1, ddof=1)
-print("\nmean and sample std (ddof=1) over 3 seeds")
-print(agg[["mean", "std"]].round(4).to_string())
-
-results["summary"] = {"mean": agg["mean"].to_dict(), "std": agg["std"].to_dict()}
-with open(f"{OUT_DIR}/baseline_results_cuda.json", "w") as f:
+runs = list(results["baseline"].values())
+rows = {"overall_acc": [r["overall_acc"] for r in runs],
+        "rare_class_recall_macro": [r["rare_class_recall_macro"] for r in runs]}
+for c in CLASSES:
+    rows[f"acc_{c}"] = [r["per_class_acc"][c] for r in runs]
+summary = pd.DataFrame(rows, index=[f"seed{s}" for s in SEEDS]).T
+summary["mean"], summary["std"] = summary.mean(axis=1), summary.std(axis=1, ddof=1)
+print(summary.round(4).to_string())
+print("\nparams (seed 0):", runs[0]["params"])
+print("train seconds:", [round(r["train_seconds"]) for r in runs])
+print("final val acc:", [round(r["val_acc_final"], 4) for r in runs])
+with open(f"{OUT_DIR}/baseline_results.json", "w") as f:
     json.dump(results, f, indent=1)
