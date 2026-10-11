@@ -331,13 +331,14 @@ for i, (k, run) in enumerate(detail_runs):
     ws.set_row(r_, 34)
 r = 4 + len(detail_runs) + 1
 ws.merge_range(r, 0, r, 14, "Baseline repeatability check (stability check only; Run 1 is the reported benchmark value)", SEC); r += 1
-for c, h in enumerate(["Metric", "", "Run 1 (ms)", "Run 2 (ms)", "% Difference", "Threshold", "Within Threshold?"]):
+ws.merge_range(r, 0, r, 1, "Metric", HDR)
+for c, h in zip(range(2, 7), ["Run 1 (ms)", "Run 2 (ms)", "% Difference", "Threshold", "Within Threshold?"]):
     ws.write(r, c, h, HDR)
 r += 1
 REP_ROW = {}
 for label, col, rel_ in (("p50 latency", 2, REP_P50), ("p95 latency", 3, REP_P95)):
     REP_ROW[label] = r
-    ws.write(r, 0, label, F(bold=True, **BORD)); ws.write(r, 1, "", F(**BORD))
+    ws.merge_range(r, 0, r, 1, label, F(bold=True, **BORD))
     ws.write_formula(r, 2, f"={rc(DROW[('baseline', 1)], col)}", F(num_format="0.000", **BORD), (BASE if col == 2 else BASE)["p50" if col == 2 else "p95"])
     ws.write_formula(r, 3, f"={rc(DROW[('baseline', 2)], col)}", F(num_format="0.000", **BORD), RUN2["p50" if col == 2 else "p95"])
     ws.write_formula(r, 4, f"=ABS({rc(r, 3)}-{rc(r, 2)})/{rc(r, 2)}", F(num_format="0.00%", bold=True, **BORD), rel_)
