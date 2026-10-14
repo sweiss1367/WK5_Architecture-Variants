@@ -1,0 +1,109 @@
+{
+  "created_utc": "2026-10-14T19:55:50+00:00",
+  "python": "3.13.16",
+  "platform": "Linux-6.18.44-fc-v114-x86_64-with-glibc2.39",
+  "generator_seed": 627,
+  "note": "positive_control.jsonl is a SYNTHETIC positive control for the contamination detector; it is hashed here but is not part of any evaluation set.",
+  "files": {
+    "data/train.jsonl": {
+      "sha256": "b34147083475b3764ae58e8593bf0d1357464a275a7fd2b4c9b3b1fbb85e41ca",
+      "bytes": 931864
+    },
+    "data/val.jsonl": {
+      "sha256": "cdee8795eca2ff0e68f4378c256c36d8073234702530f29aa8db640533b51d15",
+      "bytes": 93420
+    },
+    "data/eval_h.jsonl": {
+      "sha256": "72b0423eea9d30eaf723704b3bf360d2638d4d03b15e51b76fc85b6deab033cd",
+      "bytes": 259397
+    },
+    "data/fairness_matched.jsonl": {
+      "sha256": "2238deac4b36fd4aabe9fce41969d0f9896a6459fa989801098a0366dad498fc",
+      "bytes": 1071188
+    },
+    "data/positive_control.jsonl": {
+      "sha256": "83291736f80e591b846f6636a3fb032c94abbca772d0fb4b1118d7e432742ee7",
+      "bytes": 1120
+    },
+    "data/dataset_summary.json": {
+      "sha256": "cf465f8b16dad495c8afb8c4b5ce6f9ed77872c773d77f3ce0f74802f9bdfaeb",
+      "bytes": 1271
+    },
+    "data/dataset_audit.json": {
+      "sha256": "81caf603b67639a97d8af642602d748b612ba97f79034fc6ef331d6aa7c548e1",
+      "bytes": 2311
+    },
+    "probes/probe_suite.jsonl": {
+      "sha256": "a1ad9224f59506d20e641a2e3ca1fddf810199eed2d4e262dc5487b3d9625542",
+      "bytes": 232150
+    },
+    "probes/probe_catalog.csv": {
+      "sha256": "aba1f7039b64f6e85d295830a97a37776d4a8c6175e038d04c29302aa55f08ce",
+      "bytes": 71130
+    },
+    "analysis_plan.md": {
+      "sha256": "9483cead3ad1aa89867f2a677639420e45e58d5dca6716ab2ebeffca33343ec8",
+      "bytes": 7501
+    },
+    "configs/qlora_appeals.json": {
+      "sha256": "cf2894b0b7f92fbdc25f64f779e46e5d39b28ade76c204a2d07cadd5101b432d",
+      "bytes": 1769
+    },
+    "configs/decoding.json": {
+      "sha256": "9030298a267fd82c2124e5c67ff38e9cf5b1b6a4bcb63bc5b9c8357801aa8de5",
+      "bytes": 1266
+    },
+    "src/appeals_common.py": {
+      "sha256": "f354a69cdd29bb84899bc31cea2c515b87faf235f593f97354cec8157d64f172",
+      "bytes": 12499
+    },
+    "src/templates.py": {
+      "sha256": "5819cb6bb1ca5060ef3f4ff46c8ea79f72a2d58e0984f9564d6edc7ecfda3c3c",
+      "bytes": 8406
+    },
+    "src/case_builder.py": {
+      "sha256": "c0221c0611108526e5be71bcddaaffa878e2881b9aa7cb747f118ae6d1b215ca",
+      "bytes": 6356
+    },
+    "src/generate_appeals_data.py": {
+      "sha256": "209c86bd280769525a22ac44e45ce1b63f80e800c22b3319d675f9a4479b55f7",
+      "bytes": 9210
+    },
+    "src/build_probe_suite.py": {
+      "sha256": "16024d34c8b347c36acf7d010099193ecbd4afdae380c6baf93a8a4bdfbd557c",
+      "bytes": 19850
+    },
+    "src/audit_dataset.py": {
+      "sha256": "ed0f699eb2fe4a22151a33c0018d98801a2ef25ea8f73d8178149cfcd28e6821",
+      "bytes": 11384
+    },
+    "src/score_task.py": {
+      "sha256": "266f6890f321ad34d5262aabb3782ec5adabae87edb8f719bae48580474b6e24",
+      "bytes": 6548
+    },
+    "src/score_probes.py": {
+      "sha256": "f1a4d0369638b2435167c693e71c09537b41a27a2fc6601300e3cdeb0e228d97",
+      "bytes": 11340
+    },
+    "src/stats.py": {
+      "sha256": "e658ccaa647bf897dd7dece8008401146442ba577b28fbf59814e7832e8ec0fd",
+      "bytes": 4256
+    },
+    "src/contamination_sweep.py": {
+      "sha256": "95f0fb7c2ff3720f2feb8d9d935ecefa1b71b14bd3af968d2431395432e445f7",
+      "bytes": 8515
+    },
+    "src/analyze_fairness.py": {
+      "sha256": "6f264c0e56e75546532f4ffe73e93b2c750426e54a112a929bdf53201599aed4",
+      "bytes": 5597
+    },
+    "src/run_task_eval.py": {
+      "sha256": "7e8576dcb97c1362c5601eb4d9d60f2c7e811cad2158a85f65ec7bf9bf637d6b",
+      "bytes": 3261
+    },
+    "src/sft_data.py": {
+      "sha256": "018b658e92355c76f49c8d97b10c74deed9f63ea36b2a07f8756d9d1db4ea2b7",
+      "bytes": 2413
+    }
+  }
+}

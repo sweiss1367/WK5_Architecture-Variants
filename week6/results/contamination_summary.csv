@@ -1,0 +1,13 @@
+dataset,is_synthetic_control,n,items,flagged_items,pct_flagged,match_spans,eval_docs_shorter_than_n
+eval_h,False,8,150,108,72.0,108,814
+fairness_matched,False,8,600,432,72.0,432,3256
+probe_suite,False,8,100,78,78.0,78,569
+positive_control,True,8,1,1,100.0,2,0
+eval_h,False,13,150,0,0.0,0,934
+fairness_matched,False,13,600,0,0.0,0,3736
+probe_suite,False,13,100,0,0.0,0,638
+positive_control,True,13,1,1,100.0,1,0
+eval_h,False,20,150,0,0.0,0,936
+fairness_matched,False,20,600,0,0.0,0,3744
+probe_suite,False,20,100,0,0.0,0,659
+positive_control,True,20,1,1,100.0,1,0

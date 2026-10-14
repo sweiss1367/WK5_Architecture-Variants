@@ -1,0 +1,40 @@
+{
+  "model_name": "Qwen/Qwen2.5-0.5B-Instruct",
+  "adapter_name": "appeals_summary_sft",
+  "max_seq_len": "auto",
+  "max_seq_len_status": "AUTO: computed at training time as the longest tokenized prompt+target in train+val, rounded up to a multiple of 64. Training aborts if that exceeds 1024 or if any example would be truncated. The tokenizer is not reachable from the CPU-side build environment, so the real length audit is written to logs/token_length_audit.json by train_qlora.py on Colab.",
+  "lora": {
+    "r": 16,
+    "alpha": 32,
+    "dropout": 0.05,
+    "bias": "none",
+    "task_type": "CAUSAL_LM",
+    "target_modules": ["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    "note": "Same LoRA settings as Week 3. Target module names are verified against the loaded model at training time."
+  },
+  "quantization": {
+    "load_in_4bit": true,
+    "bnb_4bit_quant_type": "nf4",
+    "bnb_4bit_compute_dtype": "float16",
+    "bnb_4bit_use_double_quant": true,
+    "note": "FP16 compute because the T4 has no native BF16."
+  },
+  "training": {
+    "per_device_train_batch_size": 2,
+    "per_device_eval_batch_size": 4,
+    "gradient_accumulation_steps": 8,
+    "num_train_epochs": 3,
+    "learning_rate": 0.0002,
+    "lr_scheduler_type": "cosine",
+    "warmup_steps": 4,
+    "max_grad_norm": 0.3,
+    "optim": "paged_adamw_8bit",
+    "bf16": false,
+    "fp16": true,
+    "gradient_checkpointing": true,
+    "seed": 42,
+    "note": "Effective batch 16 (2 x 8). 400 examples -> 25 optimizer steps/epoch, 75 total. Micro-batch 2 rather than Week 3's 4 because these sequences are longer; the effective batch matches Week 3. No hyperparameter search is run: this is the only configuration."
+  },
+  "adapters_trained": 1,
+  "dpo": false
+}

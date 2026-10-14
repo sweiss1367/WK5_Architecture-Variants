@@ -1,0 +1,24 @@
+{
+  "manifest_sha256": "29cfecf0ca584a16033e7c4a61a89fbfb7c5eb3ec01ddaddd83c6d92eabbf000",
+  "manifest_created_utc": "2026-10-14T19:55:50+00:00",
+  "frozen_input_hashes": {
+    "data/train.jsonl": "b34147083475b3764ae58e8593bf0d1357464a275a7fd2b4c9b3b1fbb85e41ca",
+    "data/val.jsonl": "cdee8795eca2ff0e68f4378c256c36d8073234702530f29aa8db640533b51d15",
+    "data/eval_h.jsonl": "72b0423eea9d30eaf723704b3bf360d2638d4d03b15e51b76fc85b6deab033cd",
+    "data/fairness_matched.jsonl": "2238deac4b36fd4aabe9fce41969d0f9896a6459fa989801098a0366dad498fc",
+    "probes/probe_suite.jsonl": "a1ad9224f59506d20e641a2e3ca1fddf810199eed2d4e262dc5487b3d9625542",
+    "data/positive_control.jsonl": "83291736f80e591b846f6636a3fb032c94abbca772d0fb4b1118d7e432742ee7"
+  },
+  "normalization": "NFKD, strip accents, lowercase, non-alphanumeric runs -> single space, word tokens",
+  "n_values": [
+    8,
+    13,
+    20
+  ],
+  "train_val_records": 440,
+  "n_real_matches_to_inspect": 618,
+  "train_val_docs_shorter_than_8": 2762,
+  "train_val_docs_shorter_than_13": 2762,
+  "train_val_docs_shorter_than_20": 2977,
+  "limitation": "A negative n-gram result does not rule out paraphrase, translation, structural/template contamination, or contamination of the base model's pretraining data."
+}

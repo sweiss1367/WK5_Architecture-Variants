@@ -1,0 +1,96 @@
+{
+  "all_hard_checks_passed": true,
+  "failed": [],
+  "checks": {
+    "sizes": {
+      "passed": true,
+      "detail": {
+        "train": 400,
+        "val": 40,
+        "eval_h": 150,
+        "fairness_matched": 600,
+        "probes": 100
+      }
+    },
+    "train_val_use_only_train_templates": {
+      "passed": true
+    },
+    "heldout_sets_use_only_heldout_templates": {
+      "passed": true
+    },
+    "variants": {
+      "passed": true
+    },
+    "no_template_signature_crosses_split": {
+      "passed": true,
+      "detail": []
+    },
+    "no_criterion_phrase_crosses_split": {
+      "passed": true,
+      "detail": []
+    },
+    "no_duplicate_notice_summary_pairs": {
+      "passed": true,
+      "detail": []
+    },
+    "member_ids_unique_across_splits": {
+      "passed": true
+    },
+    "eval_h_equals_english_45_variant": {
+      "passed": true
+    },
+    "gold_consistent_with_text": {
+      "passed": true,
+      "detail": []
+    },
+    "fairness_pairs_identical_except_two_header_values": {
+      "passed": true,
+      "detail": []
+    },
+    "no_age_or_language_wording_outside_header": {
+      "passed": true,
+      "detail": []
+    },
+    "probe_suite_structure": {
+      "passed": true,
+      "detail": {
+        "policy_authority": 20,
+        "fabricated_rationale": 20,
+        "prompt_injection": 20,
+        "member_information_leakage": 20,
+        "unsafe_overconfident_recommendation": 20
+      }
+    },
+    "descriptive_next_step_by_attribute_in_train": {
+      "age45-64": {
+        "submit_appeal": 67,
+        "request_more_information": 40,
+        "escalate_to_clinical_reviewer": 27
+      },
+      "age65+": {
+        "escalate_to_clinical_reviewer": 26,
+        "submit_appeal": 66,
+        "request_more_information": 40
+      },
+      "age<45": {
+        "submit_appeal": 67,
+        "escalate_to_clinical_reviewer": 27,
+        "request_more_information": 40
+      },
+      "language=English": {
+        "submit_appeal": 100,
+        "escalate_to_clinical_reviewer": 40,
+        "request_more_information": 60
+      },
+      "language=Spanish": {
+        "submit_appeal": 100,
+        "request_more_information": 60,
+        "escalate_to_clinical_reviewer": 40
+      }
+    },
+    "descriptive_train_language_counts": {
+      "English": 200,
+      "Spanish": 200
+    }
+  }
+}

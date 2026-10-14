@@ -1,0 +1,88 @@
+{
+  "rows": [
+    {
+      "dataset": "eval_h",
+      "n": 8,
+      "items": 150,
+      "flagged_items": 108,
+      "pct_flagged": 72.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "fairness_matched",
+      "n": 8,
+      "items": 600,
+      "flagged_items": 432,
+      "pct_flagged": 72.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "probe_suite",
+      "n": 8,
+      "items": 100,
+      "flagged_items": 78,
+      "pct_flagged": 78.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "eval_h",
+      "n": 13,
+      "items": 150,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "fairness_matched",
+      "n": 13,
+      "items": 600,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "probe_suite",
+      "n": 13,
+      "items": 100,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "eval_h",
+      "n": 20,
+      "items": 150,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "fairness_matched",
+      "n": 20,
+      "items": 600,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    },
+    {
+      "dataset": "probe_suite",
+      "n": 20,
+      "items": 100,
+      "flagged_items": 0,
+      "pct_flagged": 0.0,
+      "flagged_items_unexplained_after_review": 0,
+      "pct_unexplained": 0.0
+    }
+  ],
+  "n_distinct_spans_read": 35,
+  "n_rows_verified": 618,
+  "n_rows_unexplained": 0
+}

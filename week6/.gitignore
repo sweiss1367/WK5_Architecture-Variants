@@ -1,0 +1,14 @@
+# Adapter weights and checkpoints are regenerated on Colab; their SHA-256 is logged instead.
+outputs/*
+!outputs/.gitkeep
+*.safetensors
+*.bin
+*.pt
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.partial
+results/generations_smoke/
+outputs_smoke/
+logs_smoke/
+results/generations_smoke/

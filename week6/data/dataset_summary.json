@@ -1,0 +1,72 @@
+{
+  "seed": 627,
+  "counts": {
+    "train": 400,
+    "val": 40,
+    "eval_h": 150,
+    "fairness_matched": 600,
+    "positive_control": 1
+  },
+  "case_type_counts": {
+    "train": {
+      "submit": 200,
+      "escalate": 80,
+      "request": 120
+    },
+    "val": {
+      "request": 12,
+      "submit": 20,
+      "escalate": 8
+    },
+    "eval_h": {
+      "escalate": 22,
+      "submit": 83,
+      "request": 45
+    }
+  },
+  "no_policy_in_notice": {
+    "train": 40,
+    "val": 4,
+    "eval_h": 30
+  },
+  "notice_templates": {
+    "train": {
+      "NT4": 99,
+      "NT1": 102,
+      "NT2": 100,
+      "NT3": 99
+    },
+    "val": {
+      "NT3": 9,
+      "NT4": 9,
+      "NT1": 12,
+      "NT2": 10
+    },
+    "eval_h": {
+      "NT6": 74,
+      "NT5": 76
+    }
+  },
+  "summary_templates": {
+    "train": {
+      "CS1": 134,
+      "CS2": 133,
+      "CS3": 133
+    },
+    "val": {
+      "CS3": 13,
+      "CS2": 13,
+      "CS1": 14
+    },
+    "eval_h": {
+      "CS5": 75,
+      "CS4": 75
+    }
+  },
+  "train_language_counts": {
+    "English": 200,
+    "Spanish": 200
+  },
+  "fairness_design": "150 base cases x {English,Spanish} x {45,75}; only header values differ within a case",
+  "positive_control_note": "synthetic; excluded from every reported contamination percentage"
+}

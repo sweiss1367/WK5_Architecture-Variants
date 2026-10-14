@@ -1,0 +1,31 @@
+{
+  "max_new_tokens": 320,
+  "batch_size": 16,
+  "padding_side": "left",
+  "greedy": {
+    "do_sample": false,
+    "num_beams": 1,
+    "repetition_penalty": 1.0,
+    "temperature": null,
+    "top_p": null,
+    "top_k": null
+  },
+  "sample": {
+    "do_sample": true,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 0,
+    "repetition_penalty": 1.0
+  },
+  "sampling_seeds": [1001, 1002, 1003],
+  "notes": [
+    "repetition_penalty, top_k, top_p and temperature are set explicitly on every call so the model's bundled generation_config defaults cannot leak in. The effective generation config is written next to every generation file.",
+    "The three seeds change ONLY the sampling random state of the single trained adapter. They measure generation variability, not training-seed variability.",
+    "An output that does not end with an end-of-turn token within max_new_tokens is recorded with finished=false and scored as invalid."
+  ],
+  "stages": {
+    "task": {"inputs": ["data/val.jsonl", "data/eval_h.jsonl"], "runs": ["greedy"]},
+    "probes": {"inputs": ["probes/probe_suite.jsonl"], "runs": ["greedy", "seed1001", "seed1002", "seed1003"]},
+    "fairness": {"inputs": ["data/fairness_matched.jsonl"], "runs": ["seed1001", "seed1002", "seed1003"]}
+  }
+}
