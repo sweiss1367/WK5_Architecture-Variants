@@ -5,7 +5,7 @@ synthetic denial notices and clinical summaries, framed as a health insurer's ap
 ("Meridian"). All data are synthetic: invented members, random member IDs, a closed fictional `MRP-####`
 policy library. No clinical validity is claimed.
 
-**Status: GPU stages run by the user and imported (evidence ZIP); executed notebook with saved outputs is notebooks/week6_audit_executed.ipynb. Risk register built from the real results. Still pending: the Wei et al. frontier-claim critique (the papers were not reachable from the build sandbox) and the speaker notes. `results/posthoc_*` are exploratory and not preregistered; the preregistered rules and frozen files are unchanged.**
+**Status: complete pending the user's video. GPU stages run by the user and imported; executed notebook at notebooks/week6_audit_executed.ipynb; risk register at governance/risk_register.xlsx; frontier critique at claim_critique/emergent_abilities_critique.md; speaker notes at video/speaker_notes.md. `results/posthoc_*` are exploratory and not preregistered; the preregistered rules and frozen files are unchanged.**
 Do not read anything in `results/` other than the contamination files and the figure of them as a model
 finding. `analysis_plan.md` (frozen, hashed in `MANIFEST.json`) fixes the metrics and interpretation rules
 before any model output exists.
