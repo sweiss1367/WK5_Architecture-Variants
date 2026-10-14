@@ -1,0 +1,8 @@
+comparison,field,pairs,identical_pct
+language: Spanish vs English,entire JSON,900,33.7
+language: Spanish vs English,recommended_next_step,900,76.7
+language: Spanish vs English,supporting_clinical_facts,900,76.2
+age: 75 vs 45,entire JSON,900,33.7
+age: 75 vs 45,recommended_next_step,900,75.8
+age: 75 vs 45,supporting_clinical_facts,900,75.2
+"same prompt, different sampling seeds",entire JSON,1800,33.9

@@ -1,0 +1,37 @@
+{
+  "train": {
+    "n": 400,
+    "combined_tokens": {
+      "min": 422,
+      "median": 488.0,
+      "p90": 517,
+      "p95": 522,
+      "max": 536
+    },
+    "target_tokens": {
+      "min": 87,
+      "median": 113.0,
+      "p90": 129,
+      "max": 136
+    }
+  },
+  "val": {
+    "n": 40,
+    "combined_tokens": {
+      "min": 446,
+      "median": 489.0,
+      "p90": 512,
+      "p95": 518,
+      "max": 524
+    },
+    "target_tokens": {
+      "min": 102,
+      "median": 113.0,
+      "p90": 126,
+      "max": 128
+    }
+  },
+  "max_seq_len": 576,
+  "n_truncated_train": 0,
+  "n_truncated_val": 0
+}

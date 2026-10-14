@@ -5,7 +5,7 @@ synthetic denial notices and clinical summaries, framed as a health insurer's ap
 ("Meridian"). All data are synthetic: invented members, random member IDs, a closed fictional `MRP-####`
 policy library. No clinical validity is claimed.
 
-**Status: CPU-side build complete and approved; GPU stages are run by the user in Colab. Until the evidence ZIP is analysed there are no model results, risk-register findings or conclusions in this directory.**
+**Status: GPU stages run by the user and imported (evidence ZIP). Risk register built from the real results. Still pending: the Wei et al. frontier-claim critique (the papers were not reachable from the build sandbox) and the speaker notes. `results/posthoc_*` are exploratory and not preregistered; the preregistered rules and frozen files are unchanged.**
 Do not read anything in `results/` other than the contamination files and the figure of them as a model
 finding. `analysis_plan.md` (frozen, hashed in `MANIFEST.json`) fixes the metrics and interpretation rules
 before any model output exists.

@@ -1,0 +1,32 @@
+[
+  {
+    "stage": "qlora_sft_appeals",
+    "status": "success",
+    "wall_time_sec": 357.7,
+    "avg_step_time_sec": 4.6104,
+    "config": {
+      "per_device_train_batch_size": 2,
+      "per_device_eval_batch_size": 4,
+      "gradient_accumulation_steps": 8,
+      "num_train_epochs": 3,
+      "learning_rate": 0.0002,
+      "lr_scheduler_type": "cosine",
+      "warmup_steps": 4,
+      "max_grad_norm": 0.3,
+      "optim": "paged_adamw_8bit",
+      "bf16": false,
+      "fp16": true,
+      "gradient_checkpointing": true,
+      "seed": 42,
+      "note": "Effective batch 16 (2 x 8). 400 examples -> 25 optimizer steps/epoch, 75 total. Micro-batch 2 rather than Week 3's 4 because these sequences are longer; the effective batch matches Week 3. No hyperparameter search is run: this is the only configuration.",
+      "max_seq_len": 576,
+      "n_train": 400,
+      "n_val": 40,
+      "trainable_params": 8798208,
+      "total_params": 323917696,
+      "trainable_pct": 2.7162
+    },
+    "peak_allocated_gb": 4.013,
+    "peak_reserved_gb": 15.326
+  }
+]

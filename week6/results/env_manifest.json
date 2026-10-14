@@ -1,0 +1,23 @@
+{
+  "python": "3.13.15",
+  "packages": {
+    "torch": "2.11.0+cu130",
+    "transformers": "5.19.0",
+    "peft": "0.21.2",
+    "bitsandbytes": "0.50.2",
+    "accelerate": "1.15.0",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3"
+  },
+  "gpu": "Tesla T4",
+  "gpu_total_memory_gib": 14.56,
+  "cuda_capability": "7.5",
+  "torch_cuda": "13.0",
+  "bf16_supported_flag": true,
+  "manifest_sha256": "29cfecf0ca584a16033e7c4a61a89fbfb7c5eb3ec01ddaddd83c6d92eabbf000",
+  "manifest_created_utc": "2026-10-14T19:55:50+00:00",
+  "example_prompt_tokens": 375,
+  "example_target_tokens": 125,
+  "tokenizer_eos_token": "<|im_end|>",
+  "tokenizer_pad_token": "<|endoftext|>"
+}
