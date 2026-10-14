@@ -88,8 +88,10 @@ md("""
 Evaluation text vs. training + validation text, after normalising case, punctuation and whitespace. Every
 match is in `results/contamination_matches.csv`. **A negative n-gram result does not rule out paraphrase,
 translation, or structural/template contamination, nor contamination of the base model's pretraining data.**
-The positive control is a synthetic record with a training summary copied in; it is not naturally occurring
-contamination and is excluded from the percentages.
+The n=8 hits are all the intentionally shared synthetic policy vocabulary (MRP identifier + "Service Coverage
+Policy" wording), classified as expected shared-domain vocabulary, not confirmed leakage. Zero matches at n=13 and
+n=20 do not prove the evaluation set is uncontaminated. The positive control is a synthetic record with a training
+summary copied in; it is not naturally occurring contamination and is excluded from the percentages.
 """)
 code("""
 s = show_csv("results/contamination_summary.csv")

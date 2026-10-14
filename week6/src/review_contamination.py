@@ -9,11 +9,12 @@ verified. A row that does not fit a known explanation is left blank and the scri
 non-zero: unexplained overlap must be investigated, not waved through.
 
 Known explanation (the only one found in the first sweep, see results/contamination_review.md):
-    CLOSED_LIBRARY_STRING  The span is a policy library display string
+    EXPECTED_SHARED_DOMAIN_VOCABULARY  The span is a policy library display string
     "MRP-#### (<Service> Coverage Policy)", optionally with ONE coincidentally adjacent word
     ("policy" before it, "we" after it). The policy library and service names are shared between
     training and evaluation by design (the model must be able to cite policy IDs), so this overlap
-    is expected. It is a structural-overlap channel, reported as such, not a leaked evaluation item.
+    is expected shared-domain vocabulary / boilerplate. It is classified as such, NOT as confirmed
+    train/evaluation leakage, and it is kept as audit evidence rather than eliminated.
 
 Outputs (results/)
     contamination_matches.csv        verdict + reason columns filled in (in place)
@@ -43,8 +44,8 @@ def explain(span: str):
                 if toks == pre + c + post and len(pre) + len(post) <= 1:
                     extra = (pre + post)
                     nb = f"; plus one coincidentally adjacent word '{extra[0]}' ({NEIGHBOURS[extra[0]]})" if extra else ""
-                    return ("closed_library_string",
-                            f"Library display string for {pid} (shared by design between train and held-out text){nb}.")
+                    return ("expected_shared_domain_vocabulary",
+                            f"Intentionally shared synthetic policy vocabulary: MRP identifier and 'Service Coverage Policy' wording for {pid}{nb}. Expected shared-domain boilerplate, not confirmed train/evaluation leakage.")
     return None
 
 
