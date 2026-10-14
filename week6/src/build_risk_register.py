@@ -174,9 +174,23 @@ def build():
             owner="Compliance / Fairness and Privacy Officer; Security",
             treat="Accept with monitoring", gate="NON-BLOCKING: monitor; re-test on each model change."),
     ]
+    owners = {  # one accountable role per row
+        "R1": "Medical Director", "R2": "Security Engineering Lead", "R3": "Appeals Operations Lead",
+        "R4": "ML Engineering Lead", "R5": "ML Engineering Lead", "R6": "Compliance Officer (fairness)",
+        "R7": "Model Risk Manager", "R8": "Privacy Officer",
+    }
+    secondary = {"R5": "MAP", "R7": "MAP"}
+    extra_iso = {"R1": "8.4", "R6": "8.4"}
     for r in rows:
-        r["score"] = r["L"] * r["I"]
-        r["residual"] = (f"Unchanged: {r['L']} x {r['I']} = {r['score']}. No control has been implemented or tested, so no risk reduction is claimed.")
+        r["nist"] = "MEASURE"                       # function of the FINDING; treatment is MANAGE (see mitigation)
+        r["nist2"] = secondary.get(r["id"], "")
+        r["owner"] = owners[r["id"]]
+        r["decision_owner"] = "Daniel Okafor"
+        r["mit"] = r["mit"].replace("Proposed: ", "Proposed treatment (MANAGE): ", 1)
+        if r["id"] in extra_iso:
+            parts = r["iso"].split("; ") + [extra_iso[r["id"]]]
+            r["iso"] = "; ".join(sorted(set(parts), key=lambda x: [int(t) for t in x.split(".")]))
+        r["score"] = r["L"] * r["I"]               # used only for ordering; the workbook cells are formulas
         r["status"] = "Proposed; not implemented; not tested"
     return rows
 
@@ -188,14 +202,20 @@ def main():
     ws.title = "Register"
     cols = [
         ("Finding ID", "id", 9), ("Finding and evidence", "finding", 70), ("Evidence limitation", "limit", 52),
-        ("NIST AI RMF function", "nist", 16), ("NIST subcategory (optional)", "nist_sub", 14),
+        ("NIST AI RMF function (of the finding)", "nist", 16), ("NIST secondary function (context)", "nist2", 14),
+        ("NIST subcategory (optional)", "nist_sub", 14),
         ("ISO/IEC 42001 clause", "iso", 18), ("Likelihood (1-5)", "L", 11), ("Impact (1-5)", "I", 9),
-        ("Current risk score (L x I)", "score", 12), ("Mitigation (proposed)", "mit", 52), ("Proposed owner role", "owner", 24),
+        ("Current risk score (L x I)", "score", 12), ("Mitigation (proposed; treatment falls under MANAGE)", "mit", 52),
+        ("Accountable owner role", "owner", 24), ("Pilot-gate and residual-risk decision owner", "decision_owner", 18),
         ("Control status", "status", 20), ("Residual risk", "residual", 36), ("Risk-treatment decision", "treat", 26),
         ("Pilot-gate implication", "gate", 40),
     ]
+    key_col = {c[1]: get_column_letter(i) for i, c in enumerate(cols, 1)}
     ws.append([c[0] for c in cols])
-    for r in sorted(rows, key=lambda x: (-x["score"], x["id"])):
+    for n, r in enumerate(sorted(rows, key=lambda x: (-x["score"], x["id"])), start=2):
+        r["score"] = f"={key_col['L']}{n}*{key_col['I']}{n}"
+        r["residual"] = (f'="Unchanged: "&{key_col["L"]}{n}&" x "&{key_col["I"]}{n}&" = "&{key_col["score"]}{n}&'
+                         f'". No control has been implemented or tested, so no risk reduction is claimed."')
         ws.append([r[c[1]] for c in cols])
     head = PatternFill("solid", fgColor="1F3A5F")
     for i, c in enumerate(cols, 1):
@@ -215,10 +235,13 @@ def main():
         ["Likelihood (1-5)", "Judgment of how often the failure would occur on pilot-like inputs given what was observed in testing: 1 not observed, 2 possible, 3 plausible, 4 frequent in testing, 5 near-certain."],
         ["Impact (1-5)", "Judgment of consequence if it occurs in a live appeals workflow: 1 negligible, 2 minor rework, 3 delayed or incorrect appeal, 4 serious member or regulatory harm possible, 5 patient-safety-relevant delay or harm."],
         ["Scores", "Qualitative, assigned by the audit author; not measurements. Reasonable reviewers may score differently."],
+        ["Accountability", "Each row has one accountable owner role. Daniel Okafor is the pilot-gate and residual-risk decision owner for every row (see that column)."],
+        ["Recommended pilot decision", "Do not clear an operational pilot yet. A tightly controlled shadow evaluation may continue, but the model should not drive routing or produce member-facing appeal content until the escalation (R1), evidence-grounding (R3), injection (R2) and real-format validation (R5, R7) requirements are addressed. This is the audit author's recommendation to the decision owner."],
+        ["Score formula", "Current risk score is a formula (Likelihood x Impact), so changing a score updates the score and the residual-risk text."],
         ["Residual risk", "Equal to current risk. No proposed control has been implemented or tested, so no reduction is claimed."],
         ["Control status", "Proposed / implemented / tested. All are 'Proposed; not implemented; not tested'."],
-        ["NIST AI RMF", "Mapped at function level (GOVERN, MAP, MEASURE, MANAGE). The subcategory column is optional context. No row maps to GOVERN yet because no governance control was assessed in this audit."],
-        ["ISO/IEC 42001", "Clauses used: 6.1.2 AI risk assessment; 6.1.3 AI risk treatment; 6.1.4 AI system impact assessment; 8.2 AI risk assessment; 8.3 AI risk treatment; 9.1 monitoring, measurement, analysis and evaluation. Clause 8.4 is not used."],
+        ["NIST AI RMF", "Function-level mapping (GOVERN, MAP, MEASURE, MANAGE). The primary function is that of the FINDING (every finding here came from measurement: MEASURE). Treatment of each finding falls under MANAGE and is described in the mitigation column. MAP is recorded as secondary context where the finding concerns how the system's context and data limit the evidence (R5, R7). The subcategory column is optional context. No row maps to GOVERN because no governance control was assessed in this audit."],
+        ["ISO/IEC 42001", "Clauses used: 6.1.2 AI risk assessment; 6.1.3 AI risk treatment; 6.1.4 AI system impact assessment; 8.2 AI risk assessment; 8.3 AI risk treatment; 9.1 monitoring, measurement, analysis and evaluation; 8.4 AI system impact assessment (performing the assessment planned under 6.1.4) is mapped to R1 and R6, the two findings about consequences for members and demographic groups."],
         ["Pilot gate", "BLOCKING = must be resolved before any pilot use; REQUIRED = condition of the pilot; CONDITION / NON-BLOCKING as stated."],
     ]:
         leg.append(line)
@@ -263,9 +286,19 @@ def main():
 
     os.makedirs("governance", exist_ok=True)
     wb.save("governance/risk_register.xlsx")
+    # Recalculate with LibreOffice (when available) so the committed file carries cached formula values and
+    # previews that do not recalculate still show the scores. Formulas are preserved.
+    import shutil, subprocess, tempfile
+    if shutil.which("soffice"):
+        with tempfile.TemporaryDirectory() as td:
+            subprocess.run(["soffice", "--headless", "--convert-to", "xlsx", "--outdir", td, "governance/risk_register.xlsx"],
+                           capture_output=True, timeout=120)
+            out = os.path.join(td, "risk_register.xlsx")
+            if os.path.exists(out):
+                shutil.copy(out, "governance/risk_register.xlsx")
     print("wrote governance/risk_register.xlsx;", len(rows), "rows")
-    for r in sorted(rows, key=lambda x: (-x["score"], x["id"])):
-        print(r["id"], r["L"], r["I"], r["score"], r["treat"])
+    for r in sorted(rows, key=lambda x: (-x["L"] * x["I"], x["id"])):
+        print(r["id"], r["L"], r["I"], r["treat"])
 
 
 if __name__ == "__main__":
