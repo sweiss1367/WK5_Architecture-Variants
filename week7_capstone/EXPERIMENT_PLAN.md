@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v3, proposed as the execution plan. **The factor is selected: positional encoding**, conditional on one fact only you can supply (Q1, Section 14). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v3, proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -387,8 +387,8 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 
 ## 14. Remaining question and defaults adopted
 
-**One question genuinely needs you.**
-- **Q1.** Was positional encoding covered or used in earlier weeks, beyond the Week 5 classifier's learned embedding? The assignment requires the factor to be "carried forward from earlier weeks." If it wasn't, I switch to LoRA rank and re-derive the controls, since LoRA's alpha scaling needs its own treatment.
+**No open questions remain.**
+- **Q1 (resolved).** Positional encoding was covered in earlier weeks, so it satisfies "carried forward from earlier weeks." LoRA rank stays on file as the fallback only if something later invalidates this choice.
 
 **Defaults adopted** for questions I raised earlier. Tell me to change any of them.
 
@@ -405,7 +405,7 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 
 | # | Decision | Status | Resolution or what blocks it |
 |---|---|---|---|
-| D1 | Factor | **Selected** | Positional encoding. The only open item is Q1. |
+| D1 | Factor | **Decided** | Positional encoding. Q1 confirmed: covered in earlier weeks. |
 | D2 | Dataset | **Decided** | Synthetic seeded generator (default adopted). |
 | D3 | Model, task, metric | Proposed | Small Transformer, 24 h ahead from 7 days, validation MAPE (MAE secondary). Numerical details confirmed by smoke and pilot. |
 | D4 | Three settings | **Decided** | Learned absolute, sinusoidal, RoPE. |
@@ -418,7 +418,7 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 | D11 | Annex IV source | Decided | Official regulation text first (Section 11, V13). |
 | D12 | Repo layout | Decided | `week7_capstone/` (6.1). |
 
-**What stands between now and building the repository.** Two things: your answer to Q1, and agreement that the numeric values for steps, δ, and k come from a pilot. The pilot needs working code, so I'd build the minimal `make_data.py`, `model.py` and `run_ablation.py` first, as the same files that later become the package, and not a separate throwaway. If you'd prefer to freeze more before any code exists, the numeric items are the only ones that can't be frozen without measuring.
+**What stands between now and building the repository.** One thing: agreement that the numeric values for steps, δ, and k come from a pilot. The pilot needs working code, so I'd build the minimal `make_data.py`, `model.py` and `run_ablation.py` first, as the same files that later become the package, and not a separate throwaway. If you'd prefer to freeze more before any code exists, the numeric items are the only ones that can't be frozen without measuring.
 
 ## 16. Changes from v1
 
@@ -435,3 +435,4 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - Defaults adopted for Q2-Q6 so only Q1 remains open.
 - Added Section 12.1, tagging every plan element [M], [A] or [R] so optional techniques aren't mistaken for graded requirements.
 - `REQUIREMENTS.md` checklist split into mandatory, adopted and recommended tiers.
+- Q1 resolved by the user: positional encoding is locked as the factor. No open questions remain.
