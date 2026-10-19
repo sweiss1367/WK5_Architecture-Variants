@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v7. The first GPU smoke session has been run and reviewed (Section 21). Fixes from it are in the code but **a second smoke session is needed to verify them**; calibration has not started and the policy-decision gate is still closed. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -535,7 +535,7 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 ### 21.3 V16, the failed memory check, diagnosed
 - **Data.** Resident GPU memory after cleanup was 65.627 MiB in all six runs (arms A, B, C; P1 and P2), against about 0.6 MiB of parameters. Subtracting parameters and buffers leaves **65.0075 MiB for every arm and both policies**.
 - **What that number is.** 65.0075 = 64 + 1 + 0.0075. That is two 32 MiB cuBLAS workspaces (`:4096:8` is eight 4 MiB buffers; one for the forward thread and one for the autograd backward thread is the likely split) plus a 1 MiB cuBLASLt workspace plus about 7 KB of small tensors. It is **not** consistent with a leak: the on-GPU datasets would weigh 12.24 MiB, and datasets plus optimizer state about 14 MiB.
-- **Status.** Strong numerical evidence, not yet a direct measurement. The old criterion (resident under 1.5 × parameter bytes + 8 MB) was mis-specified because PyTorch counts library workspaces as allocated memory. It was not loosened. V16 now compares each run with a **fresh-process baseline** that builds the model and does one forward and backward pass on a tiny batch, with no dataset and no optimizer, and passes if the run is within 1 MiB of it. A leak of any size would show as a positive difference. This has not been run yet.
+- **Status.** Strong numerical evidence, not yet a direct measurement. The old criterion (resident under 1.5 × parameter bytes + 8 MB) was mis-specified because PyTorch counts library workspaces as allocated memory. It was not loosened. V16 now compares each run with a **fresh-process baseline** that builds the model and does one forward and backward pass on a tiny batch, with no dataset and no optimizer, and passes if the run is within 1 MiB of it. A leak of any size would show as a positive difference. Result: it passed in the second session (Section 21.7).
 - **Interference with measurement.** Absolute peak memory includes this constant. It is identical for every arm, so arm differences are unaffected. Peak training memory differed across arms by at most 0.3 MiB under P1 (A 623.237, B 623.153, C 622.924), and inference peak above resident was about 1.3 MiB under P1 (B 1.28, C 1.36) and 0.5 MiB under P2.
 
 ### 21.4 Other findings
@@ -551,7 +551,42 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 4. V16 compares each run with the fresh-process baseline.
 5. The notebook never reuses a stale clone.
 
-### 21.6 Open items
-1. **Second smoke session** on the fixed commit: re-run policy timing (P2 is now default), the smoke checks, and the V16 baseline. Confirm V16 passes.
-2. If V16 does not pass, the 65 MiB overhead is not the workspace, and the leak hypothesis must be reopened.
-3. Commit the new `results/determinism_decision.json` and set `determinism.policy` in `configs/base.yaml` after review. **The decision gate stays closed until then**: the first session's decision is stored under `results/smoke/session1_0541b40/` and deliberately not at `results/determinism_decision.json`.
+### 21.6 Open items (from session 1; resolved in 21.7)
+1. Second smoke session on the fixed commit. **Done.**
+2. If V16 had not passed, reopen the leak hypothesis. **Not needed, it passed.**
+3. Commit the new decision file and set `determinism.policy`. **Decision file committed; the config is deliberately left null until the user approves.**
+
+### 21.7 Second smoke session (commit `3fca186f`), after the fixes
+**Source.** `results/smoke/session2_3fca186/` (the whole output zip). A fresh runtime: Tesla T4, driver 580.82.07, PyTorch 2.11.0+cu130, a **different physical GPU** (UUID `GPU-65ec8df7-...`) with an **identical package list** (same `pip freeze` hash as session 1). The environment check verified against the lock and reported a match, so the verify path works. The manifest shows **one** segment, as intended. `cpu_debug: false`, `accuracy_used: false`.
+
+**All checks passed:** V4 under P1 (bitwise identical), V5, V6, V7, **V16**, leakage, unit tests. V4 under P2 is informational and again not bitwise identical (about 4e-8 MAPE points apart).
+
+**V16 resolved by direct measurement.** In a fresh process that only built the model and did one forward and backward pass on a batch of 8, resident memory was 0.626 MiB after the model build and **66.25 MiB after the first forward and backward pass**, then 65.626 MiB after cleanup. The workspace allocation therefore happens in the first matrix multiplications and stays resident, and it is not left over from data or optimizer state. Every real run was within 0.001 MiB (1 KiB) of the baseline for its policy and arm. Under default kernels (P2, workspace variable now unset) the same probe gives 17.88 MiB, and the 47.75 MiB gap to P1 matches the difference in peak training memory between the two sessions' P2 runs.
+
+**Policy decision (same as session 1, now from the fixed code).**
+| | Session 1 (`0541b40`) | Session 2 (`3fca186`) |
+|---|---|---|
+| P1 train step, ms (A / B / C) | 51.8 / 53.9 / 69.6 | 36.3 / 36.9 / 41.6 |
+| P2 train step, ms (A / B / C) | 38.9 / 43.5 / 52.9 | 30.2 / 30.8 / 35.3 |
+| Fitted P1 penalty | +24% to +33% | +18% to +20% |
+| Per-run penalty range | +20% to +45% | +17% to +21% |
+| Projected 27 runs at 4000 steps, P1 / P2 | 2.13 h / 1.65 h | 1.28 h / 1.09 h |
+| Slowest single repetition, P1 | 2.5 h | 1.29 h |
+| Selected | P1 | P1 |
+
+Rule: feasibility only, ceiling 3 h. P1 is selected with a large margin in both sessions.
+
+**What the two sessions say about timing**
+- **Absolute speed differs by about 30% between sessions** for identical code and the same GPU model (different physical GPU and VM). Any comparison of training time or latency must be within one session. This is already the plan (Section 6.6), and it is now backed by data.
+- **Within a session, timing was much steadier in session 2:** repetition 1 vs repetition 0 ratios were 1.00 to 1.08, against 1.02 to 1.32 in session 1.
+- **RoPE (arm C) was still slower than A in both repetitions even though arm order rotated** (repetition 1 ended with A, not C): about 11-19% under P1 and 12-21% under P2. That is consistent with RoPE's extra operations, but it is smoke-length timing and not yet a result.
+
+**Cost measurements depend on the policy. This matters for the report.**
+- **Batch-1 inference latency:** P1 4.3-4.8 ms vs P2 (default kernels) 1.2-1.9 ms, so P1 is about 2.5 to 3.6 times slower. In session 1, P2 was 3.5-4.2 ms because it wrongly carried the workspace variable, which suggests that variable, not only the deterministic algorithms, drives the gap.
+- **Peak training memory:** P1 623 MiB for all arms (spread 0.3 MiB). Under default kernels, A and B were 334.7 MiB and **C was 366.1 MiB (+31.5 MiB)**. P1 does not show that RoPE overhead.
+- **Consequence.** The study runs under P1, so its latency and memory describe the deterministic configuration. They are internally consistent across arms, but P1 hides at least one real cost difference and exaggerates absolute latency. This was already limitation 9; it is now quantified.
+- **Optional remedy (not built; the user decides):** a short timing-only cost profile per arm under default kernels, reported next to the P1 numbers, so cost claims are not tied to the deterministic configuration.
+
+### 21.8 Status after two sessions
+- All required smoke checks pass; the environment is locked and verified; the data hash is reproduced on three machines.
+- **Ready to propose calibration.** Needed first: the user's approval, then `determinism.policy: P1` set in `configs/base.yaml` and committed.

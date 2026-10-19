@@ -1,0 +1,208 @@
+{
+ "created_utc": "2026-10-19T19:03:46.953022+00:00",
+ "steps": 100,
+ "gpu": true,
+ "torch": "2.11.0+cu130",
+ "cuda_runtime": "13.0",
+ "gpu_name": "Tesla T4",
+ "checks": [
+  {
+   "id": "V4_P1_same_seed_rerun",
+   "status": "PASS",
+   "required": false,
+   "detail": {
+    "bitwise_identical_weights": true,
+    "identical_val_mape": true,
+    "abs_val_mape_difference": 0.0,
+    "meaning": "P1 is expected to be bitwise identical. A WARN means the determinism limit must be documented as part of the noise floor. P2 is informational: it shows how much residual nondeterminism P2 carries."
+   }
+  },
+  {
+   "id": "V4_P2_same_seed_rerun",
+   "status": "INFO",
+   "required": false,
+   "detail": {
+    "bitwise_identical_weights": false,
+    "identical_val_mape": false,
+    "abs_val_mape_difference": 3.979116947050443e-08,
+    "meaning": "P1 is expected to be bitwise identical. A WARN means the determinism limit must be documented as part of the noise floor. P2 is informational: it shows how much residual nondeterminism P2 carries."
+   }
+  },
+  {
+   "id": "V5_shared_init_identical_across_arms_and_processes",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "distinct_hashes": 1,
+    "runs": [
+     "B_P1_1",
+     "B_P1_2",
+     "B_P2_1",
+     "B_P2_2",
+     "A_P1_1",
+     "C_P1_1"
+    ]
+   }
+  },
+  {
+   "id": "V6_positional_vs_value_embedding_scale",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "ratio_positional_to_value_norm": {
+     "A": 1.2620674616296077,
+     "B": 0.890516856024282
+    },
+    "criterion": "within [0.1, 10], i.e. the same order of magnitude"
+   }
+  },
+  {
+   "id": "V7_demand_floor_keeps_mape_stable",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "min_demand_over_base": 0.5477623675974218,
+    "criterion": ">= 0.1",
+    "data_sha256": "65d899e60a00802062ac5c9c0dc5202d8d5ed6e6a0d64cba593e8985fc53f695",
+    "outlier_hours": 196,
+    "gap_hours": 270
+   }
+  },
+  {
+   "id": "V16_inference_memory_excludes_training_state",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "per_run": {
+     "B_P1_1": {
+      "run_resident_mb": 65.62744140625,
+      "probe_resident_mb": 65.62646484375,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 66.90869140625,
+      "infer_peak_above_resident_mb": 1.28125
+     },
+     "B_P1_2": {
+      "run_resident_mb": 65.62744140625,
+      "probe_resident_mb": 65.62646484375,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 66.90869140625,
+      "infer_peak_above_resident_mb": 1.28125
+     },
+     "B_P2_1": {
+      "run_resident_mb": 17.87744140625,
+      "probe_resident_mb": 17.87646484375,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 18.39306640625,
+      "infer_peak_above_resident_mb": 0.515625
+     },
+     "B_P2_2": {
+      "run_resident_mb": 17.87744140625,
+      "probe_resident_mb": 17.87646484375,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 18.39306640625,
+      "infer_peak_above_resident_mb": 0.515625
+     },
+     "A_P1_1": {
+      "run_resident_mb": 65.62744140625,
+      "probe_resident_mb": 65.62646484375,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 66.90869140625,
+      "infer_peak_above_resident_mb": 1.28125
+     },
+     "C_P1_1": {
+      "run_resident_mb": 65.64794921875,
+      "probe_resident_mb": 65.64697265625,
+      "difference_mb": 0.0009765625,
+      "infer_peak_mb": 67.01123046875,
+      "infer_peak_above_resident_mb": 1.36328125
+     }
+    },
+    "probes": {
+     "P1_A": {
+      "after_model_build_mb": 0.62646484375,
+      "after_forward_backward_mb": 66.25390625,
+      "resident_after_cleanup_mb": 65.62646484375
+     },
+     "P1_B": {
+      "after_model_build_mb": 0.62646484375,
+      "after_forward_backward_mb": 66.212890625,
+      "resident_after_cleanup_mb": 65.62646484375
+     },
+     "P1_C": {
+      "after_model_build_mb": 0.64697265625,
+      "after_forward_backward_mb": 66.2333984375,
+      "resident_after_cleanup_mb": 65.64697265625
+     },
+     "P2_B": {
+      "after_model_build_mb": 0.62646484375,
+      "after_forward_backward_mb": 18.462890625,
+      "resident_after_cleanup_mb": 17.87646484375
+     }
+    },
+    "criterion": "run resident memory within 1.0 MiB of a fresh process that built the model and did one forward+backward on a tiny batch (no dataset, no optimizer)"
+   }
+  },
+  {
+   "id": "leakage_checks_inside_every_run",
+   "status": "PASS",
+   "required": true,
+   "detail": "check_no_leakage runs inside every run_ablation.py run; all runs completed"
+  },
+  {
+   "id": "unit_tests",
+   "status": "PASS",
+   "required": true,
+   "detail": "59 passed in 93.33s (0:01:33)"
+  }
+ ],
+ "runs": {
+  "B_P1_1": {
+   "policy": "P1",
+   "arm": "B",
+   "file_attempt": 1,
+   "val_mape_not_used_for_decisions": 8.869370315508798,
+   "train_seconds": 3.9012343640001745,
+   "final_weights_sha256": "09e9e9fc5ac3bc473ea4c9ca31862532f74dfc35c4de0bb423eb744c0e0cb39f"
+  },
+  "B_P1_2": {
+   "policy": "P1",
+   "arm": "B",
+   "file_attempt": 2,
+   "val_mape_not_used_for_decisions": 8.869370315508798,
+   "train_seconds": 3.865368073999889,
+   "final_weights_sha256": "09e9e9fc5ac3bc473ea4c9ca31862532f74dfc35c4de0bb423eb744c0e0cb39f"
+  },
+  "B_P2_1": {
+   "policy": "P2",
+   "arm": "B",
+   "file_attempt": 3,
+   "val_mape_not_used_for_decisions": 8.869370396321495,
+   "train_seconds": 3.261976453999978,
+   "final_weights_sha256": "c19ee7f754a0c7507ceaa39167c0cc591f5807a6ec5a3bd99299e2e46f953f6c"
+  },
+  "B_P2_2": {
+   "policy": "P2",
+   "arm": "B",
+   "file_attempt": 4,
+   "val_mape_not_used_for_decisions": 8.869370356530325,
+   "train_seconds": 3.33741982000015,
+   "final_weights_sha256": "46248f652a8c887f6d084e2d3b50343117f41b02cf9b1ab7b08120495dbd75bf"
+  },
+  "A_P1_1": {
+   "policy": "P1",
+   "arm": "A",
+   "file_attempt": 1,
+   "val_mape_not_used_for_decisions": 8.865393828960523,
+   "train_seconds": 3.972022921000189,
+   "final_weights_sha256": "b5227bed1a07d0c5ca7c330d420c942c7c8285712473a6afb03652f0573e771e"
+  },
+  "C_P1_1": {
+   "policy": "P1",
+   "arm": "C",
+   "file_attempt": 1,
+   "val_mape_not_used_for_decisions": 8.83775608673584,
+   "train_seconds": 4.397799587999998,
+   "final_weights_sha256": "5fdf860e224389c32bec3072983bcb6bbfe58d1a4e0b23dfd6696c4395a7e83f"
+  }
+ }
+}

@@ -1,0 +1,399 @@
+{
+ "created_utc": "2026-10-19T19:00:59.615108+00:00",
+ "env": {
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "python": "3.13.15",
+  "gpu_name": "Tesla T4",
+  "gpu_state_before": "name, uuid, driver_version, clocks.current.sm [MHz], clocks.max.sm [MHz], temperature.gpu, power.draw [W], utilization.gpu [%]\nTesla T4, GPU-65ec8df7-a018-36bd-674d-716109a2c544, 580.82.07, 300 MHz, 1590 MHz, 40, 9.46 W, 0 %",
+  "gpu_state_after": "name, uuid, driver_version, clocks.current.sm [MHz], clocks.max.sm [MHz], temperature.gpu, power.draw [W], utilization.gpu [%]\nTesla T4, GPU-65ec8df7-a018-36bd-674d-716109a2c544, 580.82.07, 1590 MHz, 1590 MHz, 75, 45.66 W, 0 %",
+  "git_commit": "3fca186f03d8896a0cbcfd1b51ad40ac4bfe98b9"
+ },
+ "conditions": {
+  "arms": [
+   "A",
+   "B",
+   "C"
+  ],
+  "seed": 0,
+  "step_counts": [
+   200,
+   600
+  ],
+  "repetitions": 2,
+  "warmup_run_discarded": true,
+  "order": "policy order alternates each repetition",
+  "one_fresh_process_per_run": true,
+  "stage": "smoke",
+  "timing_only": true,
+  "accuracy_computed": false,
+  "batch_size": 128,
+  "n_series": 16,
+  "model": {
+   "pos_encoding": null,
+   "d_model": 64,
+   "n_layers": 3,
+   "n_heads": 4,
+   "d_ff": 256,
+   "dropout": 0.1,
+   "head": "mean_pool",
+   "rope_base": 10000,
+   "precision": "fp32"
+  },
+  "latency_protocol": {
+   "batch_size": 1,
+   "warmup_calls": 20,
+   "timed_calls": 200,
+   "n_windows": 100,
+   "index_seed": 2025,
+   "cuda_synchronize_each_call": true,
+   "mode": "inference_mode"
+  },
+  "identical_workload_for_both_policies": true,
+  "cpu_debug": false
+ },
+ "runs": [
+  {
+   "arm": "A",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 12.093427130999999,
+   "train_seconds": 7.034579147000045,
+   "train_peak_alloc_mb": 623.2373046875,
+   "infer_p50_ms": 4.567436999991514,
+   "infer_p95_ms": 5.4175559499697075,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt2.json"
+  },
+  {
+   "arm": "A",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 10.38580841399994,
+   "train_seconds": 5.94968333099996,
+   "train_peak_alloc_mb": 334.6962890625,
+   "infer_p50_ms": 1.2820300000271345,
+   "infer_p95_ms": 1.8119439499912453,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt3.json"
+  },
+  {
+   "arm": "A",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 26.15669441600005,
+   "train_seconds": 20.976972162999914,
+   "train_peak_alloc_mb": 623.23876953125,
+   "infer_p50_ms": 4.51905799997121,
+   "infer_p95_ms": 6.234967049914523,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt4.json"
+  },
+  {
+   "arm": "A",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 21.824931971999945,
+   "train_seconds": 17.50186287600002,
+   "train_peak_alloc_mb": 334.69775390625,
+   "infer_p50_ms": 1.388013000052979,
+   "infer_p95_ms": 2.301460049977777,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt5.json"
+  },
+  {
+   "arm": "B",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 12.280256161000011,
+   "train_seconds": 7.295298506999984,
+   "train_peak_alloc_mb": 623.15380859375,
+   "infer_p50_ms": 4.278444000021864,
+   "infer_p95_ms": 5.002228500012501,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt1.json"
+  },
+  {
+   "arm": "B",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 10.405549134000012,
+   "train_seconds": 6.0700742289999425,
+   "train_peak_alloc_mb": 334.61279296875,
+   "infer_p50_ms": 1.1664730000120471,
+   "infer_p95_ms": 2.0087619000719314,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt2.json"
+  },
+  {
+   "arm": "B",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 26.779452153999955,
+   "train_seconds": 21.79725145200007,
+   "train_peak_alloc_mb": 623.1552734375,
+   "infer_p50_ms": 4.19295049999846,
+   "infer_p95_ms": 5.649426999997331,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt3.json"
+  },
+  {
+   "arm": "B",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 22.70859403099996,
+   "train_seconds": 18.32384380999997,
+   "train_peak_alloc_mb": 334.6142578125,
+   "infer_p50_ms": 1.219492999950944,
+   "infer_p95_ms": 1.9932479000260623,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt4.json"
+  },
+  {
+   "arm": "C",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 13.598641939999993,
+   "train_seconds": 8.378948326,
+   "train_peak_alloc_mb": 622.92431640625,
+   "infer_p50_ms": 4.9665109999637025,
+   "infer_p95_ms": 6.597103700045177,
+   "infer_peak_alloc_mb": 67.01123046875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt1.json"
+  },
+  {
+   "arm": "C",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 11.711061248999954,
+   "train_seconds": 7.139935292000018,
+   "train_peak_alloc_mb": 366.13330078125,
+   "infer_p50_ms": 1.8994350000411941,
+   "infer_p95_ms": 2.1872132500050157,
+   "infer_peak_alloc_mb": 18.41357421875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt2.json"
+  },
+  {
+   "arm": "C",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 30.260454159999995,
+   "train_seconds": 25.072567848999938,
+   "train_peak_alloc_mb": 622.92578125,
+   "infer_p50_ms": 4.763767499980531,
+   "infer_p95_ms": 5.402611499988552,
+   "infer_peak_alloc_mb": 67.01123046875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt3.json"
+  },
+  {
+   "arm": "C",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 25.670578639999917,
+   "train_seconds": 21.216971474999923,
+   "train_peak_alloc_mb": 366.134765625,
+   "infer_p50_ms": 1.9110479999540075,
+   "infer_p95_ms": 2.1247120999532854,
+   "infer_peak_alloc_mb": 18.41357421875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt4.json"
+  },
+  {
+   "arm": "B",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 10.767969845000039,
+   "train_seconds": 6.380028238000023,
+   "train_peak_alloc_mb": 334.61279296875,
+   "infer_p50_ms": 1.2644569999906707,
+   "infer_p95_ms": 2.3485898999751953,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt5.json"
+  },
+  {
+   "arm": "B",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 12.659669227999984,
+   "train_seconds": 7.64802467800007,
+   "train_peak_alloc_mb": 623.15380859375,
+   "infer_p50_ms": 4.269190999991679,
+   "infer_p95_ms": 4.959814749980751,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt6.json"
+  },
+  {
+   "arm": "B",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 23.18075325399991,
+   "train_seconds": 18.800475011000003,
+   "train_peak_alloc_mb": 334.6142578125,
+   "infer_p50_ms": 1.1897940000267226,
+   "infer_p95_ms": 1.5554555000278465,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt7.json"
+  },
+  {
+   "arm": "B",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 27.76955195100004,
+   "train_seconds": 22.660402255000008,
+   "train_peak_alloc_mb": 623.1552734375,
+   "infer_p50_ms": 4.626422000001185,
+   "infer_p95_ms": 6.360505050054143,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/B_seed0_attempt8.json"
+  },
+  {
+   "arm": "C",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 11.73170436600003,
+   "train_seconds": 7.11477030399999,
+   "train_peak_alloc_mb": 366.13330078125,
+   "infer_p50_ms": 1.9390989999692465,
+   "infer_p95_ms": 3.519991699977253,
+   "infer_peak_alloc_mb": 18.41357421875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt5.json"
+  },
+  {
+   "arm": "C",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 13.668860508999956,
+   "train_seconds": 8.436838901999977,
+   "train_peak_alloc_mb": 622.92431640625,
+   "infer_p50_ms": 4.867311499992866,
+   "infer_p95_ms": 5.6219391000354335,
+   "infer_peak_alloc_mb": 67.01123046875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt6.json"
+  },
+  {
+   "arm": "C",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 25.86209107000002,
+   "train_seconds": 21.28848985600007,
+   "train_peak_alloc_mb": 366.134765625,
+   "infer_p50_ms": 1.8905855000070915,
+   "infer_p95_ms": 3.2139399999607576,
+   "infer_peak_alloc_mb": 18.41357421875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt7.json"
+  },
+  {
+   "arm": "C",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 30.108191413999975,
+   "train_seconds": 24.98410797200006,
+   "train_peak_alloc_mb": 622.92578125,
+   "infer_p50_ms": 4.719593499999064,
+   "infer_p95_ms": 5.5905222501905865,
+   "infer_peak_alloc_mb": 67.01123046875,
+   "file": "results/smoke/policy_timing/smoke/C_seed0_attempt8.json"
+  },
+  {
+   "arm": "A",
+   "steps": 200,
+   "policy": "P2",
+   "wall_s": 10.854166708000093,
+   "train_seconds": 6.356697519999898,
+   "train_peak_alloc_mb": 334.6962890625,
+   "infer_p50_ms": 1.2930039999901055,
+   "infer_p95_ms": 2.15116980015182,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt6.json"
+  },
+  {
+   "arm": "A",
+   "steps": 200,
+   "policy": "P1",
+   "wall_s": 12.751322080999898,
+   "train_seconds": 7.689407647000053,
+   "train_peak_alloc_mb": 623.2373046875,
+   "infer_p50_ms": 4.35924500004603,
+   "infer_p95_ms": 5.057843649944969,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt7.json"
+  },
+  {
+   "arm": "A",
+   "steps": 600,
+   "policy": "P2",
+   "wall_s": 23.317895019999924,
+   "train_seconds": 18.979055969,
+   "train_peak_alloc_mb": 334.69775390625,
+   "infer_p50_ms": 1.3291694999679748,
+   "infer_p95_ms": 2.2819577499944894,
+   "infer_peak_alloc_mb": 18.39306640625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt8.json"
+  },
+  {
+   "arm": "A",
+   "steps": 600,
+   "policy": "P1",
+   "wall_s": 27.926203801999918,
+   "train_seconds": 22.745815166000057,
+   "train_peak_alloc_mb": 623.23876953125,
+   "infer_p50_ms": 4.377343499982089,
+   "infer_p95_ms": 5.135107200021594,
+   "infer_peak_alloc_mb": 66.90869140625,
+   "file": "results/smoke/policy_timing/smoke/A_seed0_attempt9.json"
+  }
+ ],
+ "summary": {
+  "P1": {
+   "A": {
+    "train_step_ms": 36.24850066874984,
+    "wall_per_step_ms": 36.54768625750009,
+    "wall_fixed_s": 5.1128373544999315,
+    "projected_run_s_at_Smax": 151.30358238450026,
+    "infer_p50_ms": 4.455770874997711,
+    "train_peak_alloc_mb": 623.238037109375
+   },
+   "B": {
+    "train_step_ms": 36.89291315250003,
+    "wall_per_step_ms": 37.011348395,
+    "wall_fixed_s": 5.067693015499998,
+    "projected_run_s_at_Smax": 153.1130865955,
+    "infer_p50_ms": 4.341751875003297,
+    "train_peak_alloc_mb": 623.154541015625
+   },
+   "C": {
+    "train_step_ms": 41.55111074125003,
+    "wall_per_step_ms": 41.37642890625003,
+    "wall_fixed_s": 5.358465443249969,
+    "projected_run_s_at_Smax": 170.86418106825008,
+    "infer_p50_ms": 4.829295874984041,
+    "train_peak_alloc_mb": 622.925048828125
+   }
+  },
+  "P2": {
+   "A": {
+    "train_step_ms": 30.2181724925002,
+    "wall_per_step_ms": 29.878564837499795,
+    "wall_fixed_s": 4.644274593500057,
+    "projected_run_s_at_Smax": 124.15853394349924,
+    "infer_p50_ms": 1.3230541250095484,
+    "train_peak_alloc_mb": 334.697021484375
+   },
+   "B": {
+    "train_step_ms": 30.84277044250001,
+    "wall_per_step_ms": 30.894785382499776,
+    "wall_fixed_s": 4.40780241300007,
+    "projected_run_s_at_Smax": 127.98694394299918,
+    "infer_p50_ms": 1.2100542499950961,
+    "train_peak_alloc_mb": 334.613525390625
+   },
+   "C": {
+    "train_step_ms": 35.31344466874998,
+    "wall_per_step_ms": 35.11238011874994,
+    "wall_fixed_s": 4.6989067837500045,
+    "projected_run_s_at_Smax": 145.14842725874976,
+    "infer_p50_ms": 1.910041874992885,
+    "train_peak_alloc_mb": 366.134033203125
+   }
+  }
+ }
+}

@@ -1,0 +1,92 @@
+{
+ "status": "completed",
+ "stage": "smoke",
+ "arm": "B",
+ "seed": 0,
+ "attempt": 4,
+ "session_id": "boot-5c09c2a6-7fa7-4928-a351-d6f7374b1a01",
+ "segment": 0,
+ "policy": "P2",
+ "cublas_workspace_config": null,
+ "started_utc": "2026-10-19T18:55:28.083740+00:00",
+ "pos_encoding": "sinusoidal",
+ "steps": 600,
+ "env": {
+  "host": "acc051ad49df",
+  "python": "3.13.15",
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "device_type": "cuda",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "3fca186f03d8896a0cbcfd1b51ad40ac4bfe98b9",
+  "git_dirty": false,
+  "gpu_name": "Tesla T4",
+  "gpu_memory_gb": 15.64,
+  "gpu_uuid": "GPU-65ec8df7-a018-36bd-674d-716109a2c544",
+  "driver": "580.82.07"
+ },
+ "config_sha256": "57fd99ccf916370089604163854d2597a39b996e6d5656db813f968eb1db9426",
+ "gates": {},
+ "cpu_debug": false,
+ "val_mape": null,
+ "val_mae_kw": null,
+ "test_mape": null,
+ "baselines": null,
+ "timing_only": true,
+ "train_seconds": 18.32384380999997,
+ "train_peak_alloc_mb": 334.6142578125,
+ "train_steps_per_second": 32.74422147565778,
+ "inference_latency_ms": {
+  "p50_ms": 1.219492999950944,
+  "p95_ms": 1.9932479000260623,
+  "mean_ms": 1.3232058899978938,
+  "std_ms": 0.27942070443391853,
+  "n_calls": 200
+ },
+ "inference_peak_alloc_mb": 18.39306640625,
+ "resident_alloc_before_inference_mb": 17.87744140625,
+ "final_train_loss_100": 0.054480403661727905,
+ "train_loss_curve": [
+  {
+   "step": 100,
+   "mean_train_loss": 0.13604801893234253
+  },
+  {
+   "step": 200,
+   "mean_train_loss": 0.08489491790533066
+  },
+  {
+   "step": 300,
+   "mean_train_loss": 0.07664187252521515
+  },
+  {
+   "step": 400,
+   "mean_train_loss": 0.059997741132974625
+  },
+  {
+   "step": 500,
+   "mean_train_loss": 0.05670216679573059
+  },
+  {
+   "step": 600,
+   "mean_train_loss": 0.054480403661727905
+  }
+ ],
+ "params": {
+  "total": 151768,
+  "positional": 0
+ },
+ "init_weights_sha256": "62be9675a6e2a6615c286f045d275d8ef5eebe0630f13bbcea6493b3eed6b1b6",
+ "shared_init_weights_sha256": "62be9675a6e2a6615c286f045d275d8ef5eebe0630f13bbcea6493b3eed6b1b6",
+ "final_weights_sha256": "81f2dea84200f902b5ec1616196ec1da861d4fb0f22dfb8c1c9a10ee8275ac30",
+ "value_embedding_norm": 6.3523268699646,
+ "positional_term_norm": 5.656854152679443,
+ "n_windows": {
+  "train": 11568,
+  "val": 2912,
+  "test": 2928
+ },
+ "data_sha256": "65d899e60a00802062ac5c9c0dc5202d8d5ed6e6a0d64cba593e8985fc53f695",
+ "finished_utc": "2026-10-19T18:55:47.121167+00:00"
+}

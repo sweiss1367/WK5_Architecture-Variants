@@ -1,0 +1,77 @@
+{
+ "status": "completed",
+ "stage": "smoke",
+ "arm": "B",
+ "seed": 0,
+ "attempt": 4,
+ "session_id": "boot-5c09c2a6-7fa7-4928-a351-d6f7374b1a01",
+ "segment": 0,
+ "policy": "P2",
+ "cublas_workspace_config": null,
+ "started_utc": "2026-10-19T19:01:31.779783+00:00",
+ "pos_encoding": "sinusoidal",
+ "steps": 100,
+ "env": {
+  "host": "acc051ad49df",
+  "python": "3.13.15",
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "device_type": "cuda",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "3fca186f03d8896a0cbcfd1b51ad40ac4bfe98b9",
+  "git_dirty": false,
+  "gpu_name": "Tesla T4",
+  "gpu_memory_gb": 15.64,
+  "gpu_uuid": "GPU-65ec8df7-a018-36bd-674d-716109a2c544",
+  "driver": "580.82.07"
+ },
+ "config_sha256": "38683d2b49120a9638ddbe0182a35fdce20d24248afed8e96cba9e4499e8f5df",
+ "gates": {},
+ "cpu_debug": false,
+ "val_mape": 8.869370356530325,
+ "val_mae_kw": 102.96902912374817,
+ "test_mape": 8.362361348809756,
+ "baselines": {
+  "seasonal_naive_day_val_mape": 7.081063263463845,
+  "same_hour_last_week_val_mape": 7.171450287852259,
+  "seasonal_naive_day_test_mape": 6.781527490377695,
+  "same_hour_last_week_test_mape": 6.406692973626551
+ },
+ "timing_only": false,
+ "train_seconds": 3.33741982000015,
+ "train_peak_alloc_mb": 334.6123046875,
+ "train_steps_per_second": 29.96326665309835,
+ "inference_latency_ms": {
+  "p50_ms": 1.256653500036009,
+  "p95_ms": 2.154292849922967,
+  "mean_ms": 1.3833598350026932,
+  "std_ms": 0.3681230379076056,
+  "n_calls": 200
+ },
+ "inference_peak_alloc_mb": 18.39306640625,
+ "resident_alloc_before_inference_mb": 17.87744140625,
+ "final_train_loss_100": 0.11316008865833282,
+ "train_loss_curve": [
+  {
+   "step": 100,
+   "mean_train_loss": 0.11316008865833282
+  }
+ ],
+ "params": {
+  "total": 151768,
+  "positional": 0
+ },
+ "init_weights_sha256": "62be9675a6e2a6615c286f045d275d8ef5eebe0630f13bbcea6493b3eed6b1b6",
+ "shared_init_weights_sha256": "62be9675a6e2a6615c286f045d275d8ef5eebe0630f13bbcea6493b3eed6b1b6",
+ "final_weights_sha256": "46248f652a8c887f6d084e2d3b50343117f41b02cf9b1ab7b08120495dbd75bf",
+ "value_embedding_norm": 6.3523268699646,
+ "positional_term_norm": 5.656854152679443,
+ "n_windows": {
+  "train": 11568,
+  "val": 2912,
+  "test": 2928
+ },
+ "data_sha256": "65d899e60a00802062ac5c9c0dc5202d8d5ed6e6a0d64cba593e8985fc53f695",
+ "finished_utc": "2026-10-19T19:01:36.280995+00:00"
+}
