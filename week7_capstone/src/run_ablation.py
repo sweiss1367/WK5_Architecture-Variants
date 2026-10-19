@@ -11,7 +11,11 @@ The arm config is merged over configs/base.yaml. Stages keep results apart:
 Output: results/runs/<stage>/<arm>_seed<s>_attempt<n>.json (written atomically).
 An .running marker next to it is removed on completion. A marker with no result means the attempt was interrupted.
 
-Exit codes: 0 completed, 1 run failed, 2 invalid arguments or config, 3 already completed (skipped).
+Gates (non-smoke stages): requirements.lock.txt must exist and match the installed packages; tracked files must match
+the committed code; results/determinism_decision.json must exist and agree with determinism.policy; main and extension
+also require PREREGISTRATION.md to be frozen (no `______` placeholders left).
+
+Exit codes: 0 completed, 1 run failed, 2 invalid arguments, config or gate, 3 already completed (skipped).
 """
 import argparse
 import contextlib
@@ -40,6 +44,7 @@ import torch.nn.functional as F
 import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from check_env import verify as verify_env  # noqa: E402
 from make_data import check_no_leakage, generate_or_load, make_windows, normalize  # noqa: E402
 from model import POS_TYPES, TRAIN_SEED_OFFSET, build_model, param_counts, weights_sha256  # noqa: E402
 
@@ -104,13 +109,35 @@ def env_info(device):
     info = {"host": socket.gethostname(), "python": platform.python_version(), "platform": platform.platform(),
             "torch": torch.__version__, "cuda_runtime": torch.version.cuda, "device_type": device.type,
             "packages_sha256": hashlib.sha256("\n".join(packages).encode()).hexdigest(),
-            "git_commit": sh(["git", "rev-parse", "HEAD"]), "git_dirty": bool(sh(["git", "status", "--porcelain"]))}
+            "git_commit": sh(["git", "rev-parse", "HEAD"]), "git_dirty": bool(sh(["git", "status", "--porcelain", "--untracked-files=no"]))}
     if device.type == "cuda":
         p = torch.cuda.get_device_properties(0)
         info.update(gpu_name=p.name, gpu_memory_gb=round(p.total_memory / 1e9, 2),
                     gpu_uuid=sh(["nvidia-smi", "--query-gpu=uuid", "--format=csv,noheader"]),
                     driver=sh(["nvidia-smi", "--query-gpu=driver_version", "--format=csv,noheader"]))
     return info
+
+
+def enforce_gates(args, cfg, stage, info):
+    """Refuse to start a non-smoke run unless the environment, code, policy and (for main) pre-registration are in order."""
+    if stage == "smoke":
+        return {}
+    env = verify_env(args.lock)
+    if not env["lock_present"]:
+        fail(f"{args.lock} is missing: run `python src/check_env.py --auto` in the smoke session and commit the lock")
+    if not env["matches"] and not args.allow_env_mismatch:
+        fail(f"installed packages differ from {args.lock}: {env['mismatches']}")
+    if info["git_dirty"] and not args.allow_dirty:
+        fail("tracked files differ from the committed code; commit before running a non-smoke stage")
+    if not os.path.exists(args.decision):
+        fail(f"{args.decision} is missing: run `python src/choose_policy.py` in the smoke session first")
+    selected = json.load(open(args.decision)).get("selected_policy")
+    if selected != cfg["determinism"]["policy"]:
+        fail(f"determinism.policy ({cfg['determinism']['policy']}) does not match the recorded decision ({selected})")
+    if stage in ("main", "extension") and "______" in open(args.prereg).read():
+        fail("PREREGISTRATION.md is not frozen (placeholders remain); main and extension runs are blocked")
+    return {"env_matches_lock": env["matches"], "allow_dirty": args.allow_dirty,
+            "allow_env_mismatch": args.allow_env_mismatch, "decision_policy": selected}
 
 
 def default_session_id():
@@ -251,17 +278,22 @@ def run(cfg, args, device):
              for i in range(0, steps, 100) for c in [lc[i:i + 100]]]
     final_loss = float(lc[-min(100, steps):].mean())
 
-    # evaluation (final-step weights, no checkpoint selection)
-    yva, yte = win["val"]["y"].astype(np.float64), win["test"]["y"].astype(np.float64)
-    pva, pte = predict(model, xva_d, sva_d), predict(model, xte_d, ste_d)
-    base = {"seasonal_naive_day_val_mape": mape(win["val"]["x"][:, -24:], yva),
-            "same_hour_last_week_val_mape": mape(win["val"]["x"][:, :24], yva),
-            "seasonal_naive_day_test_mape": mape(win["test"]["x"][:, -24:], yte),
-            "same_hour_last_week_test_mape": mape(win["test"]["x"][:, :24], yte)}
+    # evaluation (final-step weights, no checkpoint selection). Skipped in timing-only mode, which must not touch accuracy.
+    if args.timing_only:
+        metrics = {"val_mape": None, "val_mae_kw": None, "test_mape": None, "baselines": None, "timing_only": True}
+    else:
+        yva, yte = win["val"]["y"].astype(np.float64), win["test"]["y"].astype(np.float64)
+        pva, pte = predict(model, xva_d, sva_d), predict(model, xte_d, ste_d)
+        metrics = {"val_mape": mape(pva, yva), "val_mae_kw": mae(pva, yva), "test_mape": mape(pte, yte),
+                   "baselines": {"seasonal_naive_day_val_mape": mape(win["val"]["x"][:, -24:], yva),
+                                 "same_hour_last_week_val_mape": mape(win["val"]["x"][:, :24], yva),
+                                 "seasonal_naive_day_test_mape": mape(win["test"]["x"][:, -24:], yte),
+                                 "same_hour_last_week_test_mape": mape(win["test"]["x"][:, :24], yte)},
+                   "timing_only": False}
     final_sha = weights_sha256(model)
 
-    # inference benchmark: drop training state first so it does not inflate inference memory
-    del opt, sched, loss, losses
+    # inference benchmark: drop training state and the on-GPU datasets first, so they do not inflate inference memory
+    del opt, sched, loss, losses, xtr, ytr, xva_d, sva_d, xte_d, ste_d
     model.zero_grad(set_to_none=True)
     gc.collect()
     if device.type == "cuda":
@@ -272,8 +304,7 @@ def run(cfg, args, device):
     infer_peak = torch.cuda.max_memory_allocated() / 2**20 if device.type == "cuda" else None
 
     return {
-        "val_mape": mape(pva, yva), "val_mae_kw": mae(pva, yva), "test_mape": mape(pte, yte),
-        "baselines": base, "train_seconds": train_seconds, "train_peak_alloc_mb": train_peak,
+        **metrics, "train_seconds": train_seconds, "train_peak_alloc_mb": train_peak,
         "train_steps_per_second": steps / train_seconds,
         "inference_latency_ms": lat, "inference_peak_alloc_mb": infer_peak,
         "resident_alloc_before_inference_mb": resident if device.type == "cuda" else None,
@@ -298,6 +329,12 @@ def main():
     ap.add_argument("--manifest", default="results/session_manifest.json")
     ap.add_argument("--session-id", default=os.environ.get("ABLATION_SESSION_ID"))
     ap.add_argument("--allow-cpu", action="store_true", help="allow CPU for non-smoke stages (debug only)")
+    ap.add_argument("--timing-only", action="store_true", help="skip all accuracy evaluation (smoke only; used for policy timing)")
+    ap.add_argument("--lock", default="requirements.lock.txt")
+    ap.add_argument("--decision", default="results/determinism_decision.json")
+    ap.add_argument("--prereg", default="PREREGISTRATION.md")
+    ap.add_argument("--allow-dirty", action="store_true", help="debug/test only; recorded in the run file")
+    ap.add_argument("--allow-env-mismatch", action="store_true", help="debug/test only; recorded in the run file")
     args = ap.parse_args()
 
     cfg = load_cfg(args.base, args.config)
@@ -320,6 +357,8 @@ def main():
         if st != "smoke":
             fail("--n-series is only allowed in the smoke stage")
         cfg["data"]["n_series"] = args.n_series
+    if args.timing_only and st != "smoke":
+        fail("--timing-only is only allowed in the smoke stage")
     if args.policy:
         if st != "smoke":
             fail("--policy is only allowed in the smoke stage")
@@ -334,6 +373,8 @@ def main():
         fail("no GPU found; CPU runs are only allowed in the smoke stage (or with --allow-cpu for debugging)")
 
     policy = cfg["determinism"]["policy"]
+    info = env_info(device)
+    gates = enforce_gates(args, cfg, st, info)
     apply_determinism(policy)
     run_dir = os.path.join(args.out, st)
     os.makedirs(run_dir, exist_ok=True)
@@ -347,13 +388,12 @@ def main():
     marker = stem + ".running"
     atomic_write(marker, {"started_utc": now(), "pid": os.getpid()})
 
-    info = env_info(device)
     session_id = args.session_id or default_session_id()
     segment = ensure_segment(args.manifest, session_id, info, policy)
     record = {"status": "failed", "stage": st, "arm": arm, "seed": args.seed, "attempt": attempt,
               "session_id": session_id, "segment": segment, "policy": policy, "started_utc": now(),
               "pos_encoding": cfg["model"]["pos_encoding"], "steps": cfg["train"]["steps"], "env": info,
-              "config_sha256": hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest(),
+              "config_sha256": hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest(), "gates": gates,
               "cpu_debug": device.type == "cpu"}
     try:
         with attention_context(policy):
@@ -367,7 +407,8 @@ def main():
     os.remove(marker)
     if record["status"] != "completed":
         sys.exit(1)
-    print(f"{arm} seed {args.seed} [{st}] val_mape={record['val_mape']:.3f} train_s={record['train_seconds']:.1f} "
+    val = "n/a (timing only)" if record["val_mape"] is None else f"{record['val_mape']:.3f}"
+    print(f"{arm} seed {args.seed} [{st}] val_mape={val} train_s={record['train_seconds']:.1f} "
           f"final_train_loss={record['final_train_loss_100']:.4f} -> {stem}.json")
 
 

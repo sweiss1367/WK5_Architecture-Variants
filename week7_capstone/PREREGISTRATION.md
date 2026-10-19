@@ -94,6 +94,8 @@ The step count `S` is chosen so that training has reached a plateau. It is **not
 
 **Total pilot and calibration:** 3 + 4 + 2 = 9 short runs, fewer if Stage 2 is dropped.
 
+**Enforcement.** The calibration decision is computed by `src/calibrate.py`, which loads run files through a whitelist of training-loss fields. Validation and test values never enter it, and a test checks that adversarial validation values leave the decision unchanged.
+
 **Note on validation reuse.** Pilot and main runs score on the same validation windows. No model, hyperparameter or step-count decision uses validation error. Pilot validation numbers are used only for the reference arm's sanity checks and for `SD_A`. This is stated as a limitation.
 
 **S value:** `[PILOT] ______`
@@ -101,9 +103,9 @@ The step count `S` is chosen so that training has reached a plateau. It is **not
 ## 8. Determinism policy selection (feasibility only)
 
 - **P1:** full deterministic (seeds, `CUBLAS_WORKSPACE_CONFIG=:4096:8`, `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`, `cudnn.benchmark=False`, attention backend forced to a deterministic one if needed). **P2:** seeded only, default kernels.
-- **Selection is based on projected GPU time only.** The policy-timing script times the same tiny training configuration under P1 and P2, and it does **not compute or record any validation or test accuracy**. Accuracy plays no part in the decision.
+- **Selection is based on projected GPU time only.** `src/choose_policy.py` times the real run script, in the smoke stage with `--timing-only`, under P1 and P2 on identical workloads (same arms, seed, data, batch size and step counts; fresh process per run; warm-up discarded; policy order alternating). It does **not compute or record any validation or test accuracy**. GPU model, CUDA, PyTorch and Python versions, driver, clocks and benchmark conditions are recorded. The measured timing difference is printed and saved **before** the rule is applied.
 - **Rule.** Project total GPU time (smoke + 9 pilot and calibration runs + 9 main runs + the declared extension of 6 runs + one retry allowance of 3 runs, each at the largest grid step count, 4000) using measured P1 timings. If the projection fits within the planning ceiling (3 hours), adopt P1. Otherwise adopt P2.
-- **Recording.** The decision, timings, projection, timestamp and GPU identity are written to `results/determinism_decision.json` and copied below. The same policy is then used for all arms, seeds and stages, and is never changed.
+- **Recording and enforcement.** The decision, timings, projection, timestamp and GPU identity are written to `results/determinism_decision.json` and copied below. `determinism.policy` in `configs/base.yaml` is set to match, and the run script refuses any non-smoke run if they disagree. The same policy is then used for all arms, seeds and stages, and is never changed.
 - Limits of GPU reproducibility are documented in the package (see `EXPERIMENT_PLAN.md` Section 6.4).
 
 **Policy:** `[SMOKE] ______`  **Projected total (h):** `[SMOKE] ______`
@@ -122,7 +124,7 @@ Windows within a split overlap each other by design (context 168 h, stride 24 h)
 
 ## 10. Fixed settings, measurement and session policy
 
-All fixed settings are in `configs/base.yaml`. Measurement definitions (training duration, inference latency, peak memory), attempt handling and the session manifest are as specified in `EXPERIMENT_PLAN.md` Sections 6.6 and 7. Arm differences that cannot be removed are listed in `EXPERIMENT_PLAN.md` Section 4.3. A run whose determinism or software state differs from the manifest is flagged, not silently included.
+All fixed settings are in `configs/base.yaml`. Measurement definitions (training duration, inference latency, peak memory), attempt handling and the session manifest are as specified in `EXPERIMENT_PLAN.md` Sections 6.6 and 7. Arm differences that cannot be removed are listed in `EXPERIMENT_PLAN.md` Section 4.3. A run whose determinism or software state differs from the manifest is flagged, not silently included. The run script also refuses non-smoke runs when the environment differs from `requirements.lock.txt`, when tracked code differs from the committed code, or when the policy decision is missing. `main` and `extension` runs are refused while this file still contains `______` placeholders.
 
 ## 11. Amendment log
 

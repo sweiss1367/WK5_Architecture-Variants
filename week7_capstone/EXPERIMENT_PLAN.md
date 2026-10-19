@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v5. Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written and tested on CPU only. **No GPU smoke test has been run, so nothing about timing, determinism or memory on the T4 is known yet.** (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -182,6 +182,13 @@ week7_capstone/
   configs/base.yaml         # everything fixed, including the determinism policy
   configs/arm_{A,B,C}.yaml  # each overrides exactly one field: pos_encoding
   src/make_data.py  src/model.py  src/run_ablation.py  src/analyze.py
+  src/choose_policy.py      # P1 vs P2 timing, feasibility-only selection
+  src/smoke_checks.py       # V4, V5, V6, V7, V16 and the unit tests
+  src/check_env.py          # capture or verify requirements.lock.txt, never installs
+  src/calibrate.py          # step budget from training loss only
+  colab/week7_step3_smoke.ipynb  # thin notebook: clone, call scripts, zip outputs (smoke only)
+  results/smoke/            # smoke and policy-timing outputs, kept apart from calibration and main
+  results/determinism_decision.json  results/env_report.json  results/calibration_decision.json
   run_all.py                # [R] optional driver: loops arms x seeds, one subprocess per run (not written yet)
   results/runs/<stage>/*.json  # one file per run attempt; stages: smoke, calibration, pilot, main, extension
   results/session_manifest.json
@@ -216,10 +223,15 @@ The smoke test verifies that the backbone's initial weights are bitwise identica
 | **P1: full deterministic (preferred)** | Python/NumPy/Torch/CUDA seeded. `CUBLAS_WORKSPACE_CONFIG=:4096:8`, `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`, `cudnn.benchmark=False`, FP32, no DataLoader workers. Attention is forced to the PyTorch math backend for every arm, unconditionally (a 168-token sequence makes this cheap, and it avoids a conditional rule). |
 | **P2: seeded, not deterministic (fallback)** | Same seeding, default kernels and default attention backend selection. Remaining nondeterminism is treated as part of the noise floor and documented. |
 
-**Selection rule (written now, applied in the smoke stage).** The smoke stage times the same tiny training configuration under P1 and under P2. These two timing runs are the only place both policies appear, and they are not part of any results table. They are reported only as the "determinism penalty" measurement.
-- Project total GPU time (smoke + pilot + main + optional extension + one full re-run allowance) from the P1 timings.
-- If the projection fits within the planning ceiling (Section 9), adopt P1 for everything.
-- If it does not, adopt P2 for everything, and record the measured penalty as the reason.
+**Identical workloads.** `choose_policy.py` times the real `run_ablation.py` script, one fresh process per run, in the smoke stage with `--timing-only`, which skips all validation and test evaluation. P1 and P2 receive the same command line apart from `--policy`: arms A, B and C, seed 0, the full 16-series dataset, batch size 128, and two step counts (200 and 600) so that fixed start-up cost and per-step cost can be separated by a two-point fit. Two repetitions, one discarded warm-up run, and the P1/P2 order alternates between repetitions so GPU clock or temperature drift is not tied to one policy.
+
+**Recorded conditions.** GPU name, UUID and driver, CUDA runtime, PyTorch and Python versions, git commit, GPU clocks, temperature and power before and after the benchmark (`nvidia-smi`), the step counts, repetitions, order, batch size, dataset size and the latency protocol. All of it goes into `results/smoke/policy_timing/policy_timing.json` and the decision file.
+
+**Report before selecting.** The script writes the timing file, prints the measured P1-vs-P2 difference (train step time, inference latency, projected run time), and only then applies the rule.
+
+**Selection rule (fixed before any measurement; feasibility only).** Project the total GPU time of the remaining study from the measured P1 timings: 27 runs (3 + 4 calibration, 2 noise-pilot, 9 main, 6 extension, 3 retry allowance), each at the largest candidate step count (4000), using the slowest arm. If the projection is within the planning ceiling (3 h), select P1. Otherwise select P2. If even the selected policy exceeds the ceiling, the script prints a warning and the scope must be reduced before continuing. Accuracy plays no part.
+
+**Recording and enforcement.** The decision is written to `results/determinism_decision.json`. `determinism.policy` in `configs/base.yaml` is then set by hand to match, and `run_ablation.py` refuses any non-smoke run when the config and the decision file disagree.
 
 **Budget accounting.** All budget projections use the timings of the policy that will actually be used. Deterministic mode is expected to cost something, with the size depending on the attention path, and the measured number goes into the documentation.
 
@@ -260,6 +272,21 @@ The smoke test verifies that the backbone's initial weights are bitwise identica
 
 **Which stages count as "the session."** The assignment says the ablation runs inside a single free-tier session. I'd treat the smoke test and pilot as development sessions, disclosed in the manifest, and run the main grid plus all measurements in one session. Q5 asks you to confirm this reading.
 
+### 6.7 Gates enforced in code
+
+Each safeguard below is implemented in the repository, tested, and not left to the notebook.
+
+| Safeguard | Enforcement |
+|---|---|
+| Notebook execution order cannot change the experiment | The notebook only clones the repo and calls scripts. The smoke notebook has no calibration, pilot or main cell. |
+| Dependencies are not silently changed | No `pip install` anywhere. `check_env.py --auto` captures `requirements.lock.txt` from the first Colab session (never overwriting), then verifies it in later sessions and saves a full package list with a hash. Every non-smoke run is refused if the lock is missing or any pinned package or the Python minor version differs. An override flag exists, is recorded in the run file, and is for debugging only. |
+| Code cannot change between runs unnoticed | Non-smoke runs are refused if tracked files differ from the committed code. Each run records the git commit. |
+| Policy decided before any calibration, pilot or main run | Non-smoke runs require `results/determinism_decision.json` and a matching `determinism.policy`. |
+| Full experiment cannot run before the pre-registration is frozen | `main` and `extension` runs are refused while `PREREGISTRATION.md` contains `______` placeholders. |
+| Smoke, calibration and main outputs stay separate | Separate directories: `results/smoke/`, `results/runs/calibration/`, `results/runs/pilot/`, `results/runs/main/`, `results/runs/extension/`. A seed is only accepted in its own stage. |
+| Validation cannot influence the step budget | `calibrate.py` reads run files through a whitelist of fields (training loss, step count, arm, seed, status). Validation and test values never enter the module. A test feeds identical training losses with adversarial validation values (NaN, ±1e9) and asserts the decision is identical. |
+| Policy timing cannot use accuracy | `--timing-only` skips all evaluation, and `choose_policy.py` asserts no accuracy is present. The determinism comparison in `smoke_checks.py` runs after the decision, and its validation MAPE is never used for a decision. |
+
 ## 7. Measurements per run (D7)
 
 Two cost quantities are recorded separately and never described by the same word in the report. "Training duration" and "inference latency" are the two labels.
@@ -271,7 +298,7 @@ Two cost quantities are recorded separately and never described by the same word
 | **Training duration** | Seconds from first to last training step, with `torch.cuda.synchronize()` at both ends. There is no in-loop evaluation, so nothing is subtracted. The datasets are uploaded to the GPU once before the timed region (excluded), and the per-step batch-index transfer is included. Data generation and model construction are excluded. All stated in the report. Peak training memory therefore includes the resident dataset tensors, which are identical for all arms. |
 | **Inference latency** | Batch size 1, one 168-hour window per call, FP32, `torch.inference_mode()`, same determinism policy. Fixed set of 100 validation windows chosen with a fixed index seed. Warm-up 20 calls, then 200 timed calls cycling through the windows, each bracketed by `cuda.synchronize()`. Reported as p50, p95 and mean in milliseconds. Starting values, to be checked for stability in the pilot (V15). |
 | **Peak GPU memory (training)** | `torch.cuda.max_memory_allocated()` after `reset_peak_memory_stats()` at the start of the run, read when training ends |
-| **Peak GPU memory (inference)** | Optimizer state and gradients are deleted, cache is cleared, resident allocated memory is recorded, then `reset_peak_memory_stats()` and the latency benchmark, then the peak is read. This keeps training state out of the inference figure. |
+| **Peak GPU memory (inference)** | Optimizer state, gradients and the on-GPU datasets are deleted, cache is cleared, resident allocated memory is recorded, then `reset_peak_memory_stats()` and the latency benchmark, then the peak is read. This keeps training state out of the inference figure. |
 | Context fields | Seed, arm, attempt, segment index, parameter count, steps, final train loss, policy, torch/CUDA versions, GPU name and UUID, timestamps, git commit |
 
 Peak memory is "allocated" and not "reserved," so it excludes CUDA context and allocator cache. The same code path measures it in every run.
@@ -344,12 +371,12 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 | V8 | Do windows align so position 24k is midnight? | Unit test | Passes | Fix windowing |
 | V9 | RoPE and sinusoidal correctness | Unit tests (shapes, norm preservation, RoPE relative-position property) | Pass | Fix implementation |
 | V10 | Is a plausible δ separable from the reference-arm noise at three seeds? | Noise pilot: compare `k × √2 × SD_A` with δ | The product is not far above any δ worth caring about | Report as a noise-floor study per Section 8. No rescue by tuning, and δ is not lowered |
-| V11 | Environment pin | `pip freeze` captured on the real Colab runtime | Lockfile recorded with the Colab image date | Pin what Colab provides (torch is preinstalled, not reinstalled) |
+| V11 | Environment pin | `pip freeze` captured on the real Colab runtime | `requirements.lock.txt` captured in the first Colab session, committed, and verified in every later session. No packages are installed or upgraded | Pin what Colab provides (torch is preinstalled, not reinstalled) |
 | V12 | Run-to-run timing noise on a shared free-tier GPU | Pilot repeats | Timing spread reported with every time claim | Report as measured, no stronger claims |
 | V13 | Can I reach EUR-Lex to read Annex IV? | Try to fetch | Official text retrieved | You paste or upload the official text. I do not write Annex IV content from memory. |
 | V14 | Size of the deterministic-mode penalty and the resulting policy | Smoke P1 vs P2 timing, then the 6.4 rule | Policy selected by projected GPU time only, not by any accuracy figure, and frozen | Adopt P2 and document the measured penalty |
 | V15 | Is batch-1 latency stable enough to compare arms? | Pilot: repeat the latency benchmark within and across runs | Spread across repeats small relative to any arm difference, or reported as inconclusive | Raise timed calls; otherwise report latency as inconclusive |
-| V16 | Does inference peak memory exclude training state? | Smoke: check resident allocated memory after cleanup is about the weight size | Yes | Move the latency benchmark to a second process that loads saved weights |
+| V16 | Does inference peak memory exclude training state and datasets? | Smoke: resident allocated memory after cleanup is at most 1.5 × parameter bytes + 8 MB | Yes | Move the latency benchmark to a second process that loads saved weights |
 | V18 | No train/validation/test leakage in the generated windows | Unit tests on the arrays: max train context and target time < validation start, no validation or test target hour in any training window, per-window normalization only, gap fill uses past values only | All assertions pass | Fix the windowing or generator before any pilot |
 | V19 | Do the leakage tests actually catch a violation? | Deliberately build a leaking split in a test and confirm the assertions fail | Test fails on the leaking split | Fix the tests |
 | V17 | Does the session manifest capture GPU UUID and versions? | Smoke: inspect the manifest, and simulate an interrupted run | `.running` marker left, attempt 2 recorded | Fix the driver |
@@ -478,3 +505,12 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - **Noise pilot** estimates reference-arm variability only (`SD_A`). Between-arm validation differences are not inspected and cannot influence δ, steps or any setting.
 - **Step 2 code** written: `make_data.py`, `model.py`, `run_ablation.py`, and 34 tests. P1 now includes the math attention backend unconditionally. There is no in-loop evaluation. Datasets are uploaded to the GPU once before timing.
 - **Shared initialization:** the shared backbone is built from the run seed, the positional module from a separate derived seed, and tests assert bitwise-identical shared weights across all three arms. Each run also records a hash of the shared initial weights.
+
+## 20. Changes from v5 (Step 3)
+
+- `choose_policy.py`: identical-workload P1/P2 timing in fresh processes, timing-only, conditions recorded, measured difference printed before the feasibility-only selection, decision file enforced against the config.
+- `smoke_checks.py`: V4 (determinism, run after the decision), V5, V6, V7, V16, unit tests.
+- `check_env.py` and the lock: capture once, verify afterwards, never install. Mismatch blocks non-smoke runs.
+- `calibrate.py`: step budget from a whitelist of training-loss fields only, tested against adversarial validation values.
+- Gates added to `run_ablation.py` (Section 6.7). The notebook is smoke-only.
+- Dataset tensors are now freed before the inference-memory measurement, so inference memory is not inflated by the resident dataset.
