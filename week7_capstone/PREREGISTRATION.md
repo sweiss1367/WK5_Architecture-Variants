@@ -94,6 +94,8 @@ The step count `S` is chosen so that training has reached a plateau. It is **not
 
 **Total pilot and calibration:** 3 + 4 + 2 = 9 short runs, fewer if Stage 2 is dropped.
 
+**Blinding in code.** In the calibration and pilot stages, arms B and C skip all validation and test evaluation, so no between-arm validation number exists to inspect. Arm A is evaluated. Main-stage runs evaluate every arm.
+
 **Enforcement.** The calibration decision is computed by `src/calibrate.py`, which loads run files through a whitelist of training-loss fields. Validation and test values never enter it, and a test checks that adversarial validation values leave the decision unchanged.
 
 **Note on validation reuse.** Pilot and main runs score on the same validation windows. No model, hyperparameter or step-count decision uses validation error. Pilot validation numbers are used only for the reference arm's sanity checks and for `SD_A`. This is stated as a limitation.
@@ -108,7 +110,7 @@ The step count `S` is chosen so that training has reached a plateau. It is **not
 - **Recording and enforcement.** The decision, timings, projection, timestamp and GPU identity are written to `results/determinism_decision.json` and copied below. `determinism.policy` in `configs/base.yaml` is set to match, and the run script refuses any non-smoke run if they disagree. The same policy is then used for all arms, seeds and stages, and is never changed.
 - Limits of GPU reproducibility are documented in the package (see `EXPERIMENT_PLAN.md` Section 6.4).
 
-**Policy:** `[SMOKE] ______`  **Projected total (h):** `[SMOKE] ______`
+**Policy:** `P1` (selected by the rule in two smoke sessions, `results/determinism_decision.json`; approved by the user)  **Projected total (h):** `1.28` (session 2, commit `3fca186f`; session 1 gave 2.13)
 
 ## 9. Leakage prevention
 

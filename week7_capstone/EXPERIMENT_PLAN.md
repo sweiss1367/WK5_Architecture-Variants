@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -590,3 +590,21 @@ Rule: feasibility only, ceiling 3 h. P1 is selected with a large margin in both 
 ### 21.8 Status after two sessions
 - All required smoke checks pass; the environment is locked and verified; the data hash is reproduced on three machines.
 - **Ready to propose calibration.** Needed first: the user's approval, then `determinism.policy: P1` set in `configs/base.yaml` and committed.
+
+## 22. Calibration as implemented (user-approved)
+
+**Decisions recorded.** Policy P1 approved and set in `configs/base.yaml`. The optional default-kernel cost profile (Section 21.7) was **declined**, so latency and peak memory are reported under P1 only. This is limitation 9, now quantified: P1 batch-1 latency was 4.3-4.8 ms against 1.2-1.9 ms under default kernels in session 2, and peak training memory under P1 does not show the roughly 31 MiB extra that RoPE used under default kernels. The report must say so wherever it quotes latency or memory.
+
+**What runs** (`colab/week7_step4_calibration.ipynb`, driver `src/run_calibration.py`, rule in `src/calibrate.py`):
+1. Stage 1: arm A, seed 900, S in {1000, 2000, 4000}. Three runs.
+2. Stage 2: arms B and C at S* and the next grid value, moving S* up for all arms if an arm has not plateaued. Four runs if S* passes at once.
+3. Stop when the rule is satisfied, or hand to a human if no grid value qualifies (the S=8000 expansion depends on the timing projection). A cap of 12 runs applies.
+4. The noise pilot (arm A, seeds 901 and 902) is **not** part of this notebook. It follows once `train.steps` is set from the reviewed calibration result.
+
+**Enforced in code and tested**
+- Step budget from training loss only (whitelisted fields).
+- Arms B and C compute no validation or test metric in the calibration or pilot stages (`eval_blinded`), and the console line says "not computed".
+- The calibration run key includes the step count. This fixed a bug found while testing the driver: without it, a second grid value for the same arm and seed would have been skipped as already completed.
+- The calibration notebook has no pilot, main or extension cell, and the run script refuses those stages while their gates are unmet.
+
+**Expected cost** (estimate from session 2 timings, P1, about 36 ms/step plus about 6 s start-up): stage 1 about 5 min, stage 2 about 8 min, so 13-20 minutes.

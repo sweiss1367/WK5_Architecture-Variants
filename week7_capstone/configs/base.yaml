@@ -43,7 +43,7 @@ train:
   steps: null                    # PILOT: set from training-loss calibration, then frozen
 
 determinism:
-  policy: null                   # SMOKE: P1 (full deterministic) or P2 (seeded only), set once by the feasibility rule
+  policy: P1                     # selected by the feasibility rule in two smoke sessions (results/determinism_decision.json); approved by the user
 
 eval:
   primary_metric: val_mape

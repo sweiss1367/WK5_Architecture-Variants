@@ -7,7 +7,7 @@ import calibrate as C
 def write(d, arm, steps, train_loss, val_mape, status="completed", stage="calibration", seed=900):
     os.makedirs(d, exist_ok=True)
     json.dump({"arm": arm, "seed": seed, "steps": steps, "stage": stage, "status": status, "attempt": 1,
-               "final_train_loss_100": train_loss, "val_mape": val_mape, "val_mae_kw": val_mape, "test_mape": val_mape,
+               "final_train_loss_100": train_loss, "train_seconds": 10.0, "val_mape": val_mape, "val_mae_kw": val_mape, "test_mape": val_mape,
                "baselines": {"x": val_mape}}, open(os.path.join(d, f"{arm}_{steps}_{stage}_{seed}_{status}.json"), "w"))
 
 
@@ -71,3 +71,38 @@ def test_other_stages_seeds_and_failed_runs_are_ignored(tmp_path):
     write(str(tmp_path), "A", 2000, 0.001, 1.0, seed=901)
     write(str(tmp_path), "A", 4000, 0.001, 1.0, status="failed")
     assert C.load_training_losses(str(tmp_path)) == {("A", 1000): 0.200, ("A", 2000): 0.150, ("A", 4000): 0.148}
+
+
+def test_next_runs_asks_for_arm_a_first_then_only_what_the_rule_needs(tmp_path):
+    assert C.next_runs({}) == [("A", 1000), ("A", 2000), ("A", 4000)]
+    la = {("A", 1000): 0.200, ("A", 2000): 0.150, ("A", 4000): 0.148}
+    assert C.next_runs(la) == [("B", 2000), ("B", 4000), ("C", 2000), ("C", 4000)]       # S* = 2000
+    part = {**la, ("B", 2000): 0.151, ("B", 4000): 0.149}
+    assert C.next_runs(part) == [("C", 2000), ("C", 4000)]
+    assert C.next_runs(OK_ALL) == []                                                      # everything passes: done
+
+
+def test_next_runs_moves_up_when_an_arm_has_not_plateaued():
+    la = {("A", 1000): 0.1500, ("A", 2000): 0.1490, ("A", 4000): 0.1485}                  # S* = 1000
+    assert C.next_runs(la) == [("B", 1000), ("B", 2000), ("C", 1000), ("C", 2000)]
+    loss = {**la, ("B", 1000): 0.1510, ("B", 2000): 0.1500, ("C", 1000): 0.20, ("C", 2000): 0.15}   # C still improving
+    assert C.next_runs(loss) == [("B", 4000), ("C", 4000)]                                # now check S = 2000 -> 4000
+    full = {**loss, ("B", 4000): 0.1495, ("C", 4000): 0.1495}
+    d = C.decide(full)
+    assert d["status"] == "ok" and d["recommended_S"] == 2000 and "moved up" in d["note"]
+    assert C.next_runs(full) == []
+
+
+def test_decide_reports_grid_exhausted_and_expansion_trigger():
+    la = {("A", 1000): 0.30, ("A", 2000): 0.20, ("A", 4000): 0.15}
+    d = C.decide(la)
+    assert d["status"] == "no_grid_value_qualifies" and "8000" in d["next_action"] and C.next_runs(la) == []
+    lb = {("A", 1000): 0.200, ("A", 2000): 0.150, ("A", 4000): 0.148, ("B", 2000): 0.20, ("B", 4000): 0.15,
+          ("C", 2000): 0.151, ("C", 4000): 0.149}
+    assert C.decide(lb)["status"] == "grid_exhausted"
+
+
+def test_decision_ignores_validation_even_through_the_full_decide_path(tmp_path):
+    a, b = tmp_path / "a", tmp_path / "b"
+    build(str(a), OK_ALL, val=5.0); build(str(b), OK_ALL, val=-1e9)
+    assert C.decide(C.load_training_losses(str(a))) == C.decide(C.load_training_losses(str(b)))

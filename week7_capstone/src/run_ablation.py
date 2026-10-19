@@ -8,8 +8,12 @@ The arm config is merged over configs/base.yaml. Stages keep results apart:
     pilot        noise pilot, seeds 900-902
     main         seeds 0-2
     extension    seeds 3-4 (only if declared in PREREGISTRATION.md)
-Output: results/runs/<stage>/<arm>_seed<s>_attempt<n>.json (written atomically).
+Output: results/runs/<stage>/<arm>_seed<s>_attempt<n>.json (written atomically); in the calibration stage the name is
+<arm>_seed<s>_S<steps>_attempt<n>.json.
 An .running marker next to it is removed on completion. A marker with no result means the attempt was interrupted.
+
+Blinding: in the calibration and pilot stages, arms B and C skip all validation and test evaluation, so no
+between-arm validation number exists before the pre-registration is frozen (PREREGISTRATION.md Section 6.1).
 
 Gates (non-smoke stages): requirements.lock.txt must exist and match the installed packages; tracked files must match
 the committed code; results/determinism_decision.json must exist and agree with determinism.policy; main and extension
@@ -219,7 +223,7 @@ def latency_benchmark(model, xn_val, lcfg, device, sync):
             "std_ms": float(t.std(ddof=1)), "n_calls": len(t)}
 
 
-def run(cfg, args, device):
+def run(cfg, args, device, blind_eval=False):
     d, m, tr = cfg["data"], cfg["model"], cfg["train"]
     sync = torch.cuda.synchronize if device.type == "cuda" else (lambda: None)
     steps, B = tr["steps"], tr["batch_size"]
@@ -280,8 +284,9 @@ def run(cfg, args, device):
     final_loss = float(lc[-min(100, steps):].mean())
 
     # evaluation (final-step weights, no checkpoint selection). Skipped in timing-only mode, which must not touch accuracy.
-    if args.timing_only:
-        metrics = {"val_mape": None, "val_mae_kw": None, "test_mape": None, "baselines": None, "timing_only": True}
+    if args.timing_only or blind_eval:
+        metrics = {"val_mape": None, "val_mae_kw": None, "test_mape": None, "baselines": None,
+                   "timing_only": bool(args.timing_only), "eval_blinded": bool(blind_eval)}
     else:
         yva, yte = win["val"]["y"].astype(np.float64), win["test"]["y"].astype(np.float64)
         pva, pte = predict(model, xva_d, sva_d), predict(model, xte_d, ste_d)
@@ -290,7 +295,7 @@ def run(cfg, args, device):
                                  "same_hour_last_week_val_mape": mape(win["val"]["x"][:, :24], yva),
                                  "seasonal_naive_day_test_mape": mape(win["test"]["x"][:, -24:], yte),
                                  "same_hour_last_week_test_mape": mape(win["test"]["x"][:, :24], yte)},
-                   "timing_only": False}
+                   "timing_only": False, "eval_blinded": False}
     final_sha = weights_sha256(model)
 
     # inference benchmark: drop training state and the on-GPU datasets first, so they do not inflate inference memory
@@ -380,7 +385,8 @@ def main():
     run_dir = os.path.join(args.out, st)
     os.makedirs(run_dir, exist_ok=True)
     os.makedirs(os.path.dirname(args.manifest) or ".", exist_ok=True)
-    prefix = f"{arm}_seed{args.seed}"
+    # calibration runs the same arm and seed at several step counts, so the step count is part of the run key there
+    prefix = f"{arm}_seed{args.seed}" + (f"_S{cfg['train']['steps']}" if st == "calibration" else "")
     if st != "smoke" and has_completed(run_dir, prefix):
         print(f"{prefix}: already completed in stage '{st}', skipping")
         sys.exit(3)
@@ -399,7 +405,7 @@ def main():
               "cpu_debug": device.type == "cpu"}
     try:
         with attention_context(policy):
-            record.update(run(cfg, args, device))
+            record.update(run(cfg, args, device, blind_eval=st in ("calibration", "pilot") and arm != "A"))
         record["status"] = "completed"
     except Exception:
         record["error"] = traceback.format_exc()
@@ -409,8 +415,8 @@ def main():
     os.remove(marker)
     if record["status"] != "completed":
         sys.exit(1)
-    val = "n/a (timing only)" if record["val_mape"] is None else f"{record['val_mape']:.3f}"
-    print(f"{arm} seed {args.seed} [{st}] val_mape={val} train_s={record['train_seconds']:.1f} "
+    val = "not computed" if record["val_mape"] is None else f"{record['val_mape']:.3f}"
+    print(f"{arm} seed {args.seed} [{st}] steps={record['steps']} val_mape={val} train_s={record['train_seconds']:.1f} "
           f"final_train_loss={record['final_train_loss_100']:.4f} -> {stem}.json")
 
 

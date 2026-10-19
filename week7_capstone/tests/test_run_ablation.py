@@ -56,10 +56,19 @@ def test_steps_override_only_in_smoke_and_calibration(env):
     assert p.returncode == 2 and "--steps is only allowed" in p.stderr
 
 
+def test_calibration_runs_of_one_arm_at_different_step_counts_are_separate_runs(env):
+    """Regression: the run key must include the step count, or the second grid value is skipped as already completed."""
+    assert run(env, "A", 900, "calibration", "--steps", "10").returncode == 0
+    assert run(env, "A", 900, "calibration", "--steps", "20").returncode == 0
+    d = os.path.join(env["out"], "calibration")
+    assert sorted(os.listdir(d)) == ["A_seed900_S10_attempt1.json", "A_seed900_S20_attempt1.json"]
+    assert run(env, "A", 900, "calibration", "--steps", "20").returncode == 3            # same arm, seed and steps: skipped
+
+
 def test_completed_run_is_written_then_skipped(env):
     p = run(env)
     assert p.returncode == 0, p.stderr
-    f = os.path.join(env["out"], "calibration", "A_seed900_attempt1.json")
+    f = os.path.join(env["out"], "calibration", "A_seed900_S12_attempt1.json")
     r = json.load(open(f))
     assert r["status"] == "completed" and r["stage"] == "calibration" and r["policy"] == "P1"
     assert r["cpu_debug"] == (not torch.cuda.is_available())
@@ -72,11 +81,11 @@ def test_completed_run_is_written_then_skipped(env):
 
 def test_interrupted_attempt_is_kept_and_next_attempt_is_numbered(env):
     d = os.path.join(env["out"], "calibration"); os.makedirs(d)
-    marker = os.path.join(d, "A_seed900_attempt1.running"); open(marker, "w").write("{}")
+    marker = os.path.join(d, "A_seed900_S12_attempt1.running"); open(marker, "w").write("{}")
     p = run(env)
     assert p.returncode == 0, p.stderr
     assert os.path.exists(marker)                     # the interrupted attempt is never deleted
-    assert os.path.exists(os.path.join(d, "A_seed900_attempt2.json"))
+    assert os.path.exists(os.path.join(d, "A_seed900_S12_attempt2.json"))
 
 
 def test_segment_manifest_records_session_once(env):
@@ -88,11 +97,12 @@ def test_segment_manifest_records_session_once(env):
 
 
 def test_same_seed_same_result_under_policy_p1(env):
-    run(env, "B", 900, "calibration")
-    a = json.load(open(os.path.join(env["out"], "calibration", "B_seed900_attempt1.json")))
+    run(env, "A", 900, "calibration")
+    a = json.load(open(os.path.join(env["out"], "calibration", "A_seed900_S12_attempt1.json")))
     env2 = dict(env, out=env["out"] + "2")
-    run(env2, "B", 900, "calibration")
-    b = json.load(open(os.path.join(env2["out"], "calibration", "B_seed900_attempt1.json")))
+    run(env2, "A", 900, "calibration")
+    b = json.load(open(os.path.join(env2["out"], "calibration", "A_seed900_S12_attempt1.json")))
+    assert a["val_mape"] is not None
     assert a["final_weights_sha256"] == b["final_weights_sha256"] and a["val_mape"] == b["val_mape"]
 
 
@@ -138,3 +148,72 @@ def test_timing_only_records_no_accuracy(env):
 
 def test_timing_only_is_refused_outside_smoke(env):
     assert run(env, "A", 900, "calibration", "--timing-only").returncode == 2
+
+
+def test_arms_b_and_c_are_blinded_in_calibration_and_pilot_but_not_arm_a_or_main(env):
+    def load(stage, arm, seed):
+        suffix = "_S12" if stage == "calibration" else ""
+        return json.load(open(os.path.join(env["out"], stage, f"{arm}_seed{seed}{suffix}_attempt1.json")))
+    for arm in ("B", "C"):
+        assert run(env, arm, 900, "calibration").returncode == 0
+        r = load("calibration", arm, 900)
+        assert r["eval_blinded"] is True
+        assert r["val_mape"] is None and r["val_mae_kw"] is None and r["test_mape"] is None and r["baselines"] is None
+        assert "train_seconds" in r and "final_train_loss_100" in r
+    assert run(env, "B", 901, "pilot").returncode == 0
+    assert load("pilot", "B", 901)["val_mape"] is None                                   # blinded in the pilot too
+    assert run(env, "A", 900, "calibration").returncode == 0
+    ra = load("calibration", "A", 900)
+    assert ra["eval_blinded"] is False and ra["val_mape"] is not None                    # the reference arm is evaluated
+    rm = run(env, "B", 0, "main")
+    assert rm.returncode == 0, rm.stderr
+    rb = load("main", "B", 0)
+    assert rb["eval_blinded"] is False and rb["val_mape"] is not None                    # never blinded in the main study
+
+
+def test_blinded_runs_never_print_a_validation_number(env):
+    p = run(env, "B", 900, "calibration")
+    assert p.returncode == 0 and "val_mape=not computed" in p.stdout
+    assert "val_mape=" in p.stdout and not any(ch.isdigit() for ch in p.stdout.split("val_mape=")[1].split()[0])
+
+
+def driver_cmd(env, cal_decision, *extra):
+    return [sys.executable, os.path.join(ROOT, "src", "run_calibration.py"), "--grid", "10", "20", "40", "--base", env["base"],
+            "--runs", os.path.join(env["out"], "calibration"), "--out", env["out"], "--manifest", env["manifest"],
+            "--calibration-decision", cal_decision, "--allow-cpu", "--data-dir", env["data"], "--lock", env["lock"],
+            "--decision", env["decision"], "--prereg", env["prereg"], "--allow-dirty", *extra]
+
+
+def test_calibration_driver_runs_only_what_the_rule_needs_and_never_touches_pilot_or_main(env):
+    cal_decision = str(env["tmp"] / "calibration_decision.json")
+    cmd = driver_cmd(env, cal_decision, "--threshold", "5.0")      # a loose threshold, so stage 1 qualifies at the first value
+    p = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 0, p.stdout + p.stderr
+    d = json.load(open(cal_decision))
+    assert d["validation_used"] is False and d["status"] == "ok" and d["recommended_S"] == 10
+    cal_dir = os.path.join(env["out"], "calibration")
+    names = sorted(n for n in os.listdir(cal_dir) if n.endswith(".json"))
+    assert names == ["A_seed900_S10_attempt1.json", "A_seed900_S20_attempt1.json", "A_seed900_S40_attempt1.json",
+                     "B_seed900_S10_attempt1.json", "B_seed900_S20_attempt1.json",
+                     "C_seed900_S10_attempt1.json", "C_seed900_S20_attempt1.json"]       # stage 1 on A, stage 2 only at S* and the next
+    for n in names:
+        r = json.load(open(os.path.join(cal_dir, n)))
+        assert (r["val_mape"] is None) == (not n.startswith("A_"))                           # B and C never evaluated
+    assert not os.path.exists(os.path.join(env["out"], "pilot")) and not os.path.exists(os.path.join(env["out"], "main"))
+    again = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    assert again.returncode == 0 and "0 run this invocation" in again.stdout               # nothing left to run
+
+
+def test_calibration_driver_stops_for_a_human_when_no_grid_value_qualifies(env):
+    cal_decision = str(env["tmp"] / "calibration_decision.json")
+    p = subprocess.run(driver_cmd(env, cal_decision, "--threshold", "-5.0"), capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 0, p.stdout + p.stderr
+    d = json.load(open(cal_decision))
+    assert d["status"] == "no_grid_value_qualifies" and "8000" in d["next_action"]
+    cal_dir = os.path.join(env["out"], "calibration")
+    assert sorted(n[:1] for n in os.listdir(cal_dir) if n.endswith(".json")) == ["A", "A", "A"]    # arm A only; B and C not run
+
+
+def test_calibration_driver_respects_max_runs(env):
+    p = subprocess.run(driver_cmd(env, str(env["tmp"] / "d.json"), "--max-runs", "1"), capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode != 0 and "max-runs" in p.stderr + p.stdout
