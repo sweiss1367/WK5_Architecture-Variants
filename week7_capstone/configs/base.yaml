@@ -1,0 +1,68 @@
+# Shared settings for every arm. Arm configs override exactly one field: model.pos_encoding.
+# Fields set to null are decided by the smoke test or pilot and frozen in PREREGISTRATION.md
+# BEFORE any main run. run_ablation.py must refuse to start a main run while any of them is null.
+
+study:
+  main_seeds: [0, 1, 2]
+  extension_seeds: [3, 4]        # used only if PREREGISTRATION.md declares and triggers the extension
+  pilot_seeds: [900, 901, 902]   # never mixed into main tables
+  calibration_seed: 900          # step-budget calibration uses this seed only
+
+data:
+  data_seed: 42                  # dataset is identical for every run; model seeds never touch it
+  n_series: 16
+  years: 3
+  split_months: {train: 24, val: 6, test: 6}   # temporal, no shuffling across time
+  context_hours: 168
+  horizon_hours: 24
+  window_stride_hours: 24
+  window_start_hour: 0           # every window starts at 00:00
+  demand_floor_frac_of_base: 0.2 # provisional; checked in the smoke test (V7)
+
+model:
+  pos_encoding: null             # overridden by the arm config: learned | sinusoidal | rope
+  d_model: 64
+  n_layers: 3
+  n_heads: 4
+  d_ff: 256
+  dropout: 0.1
+  head: mean_pool                # mean over tokens, then linear to horizon_hours outputs
+  rope_base: 10000
+  precision: fp32
+
+train:
+  loss: l1_normalized
+  optimizer: adamw
+  lr: 0.001                      # Week 5 values; no per-arm tuning
+  weight_decay: 0.01
+  warmup_steps: 100
+  schedule: linear_warmup_then_linear_decay
+  batch_size: 128
+  grad_accumulation: 1           # must stay 1; the script errors instead of falling back
+  early_stopping: false
+  steps: null                    # PILOT: set from training-loss calibration, then frozen
+
+determinism:
+  policy: null                   # SMOKE: P1 (full deterministic) or P2 (seeded only), set once by the feasibility rule
+
+eval:
+  primary_metric: val_mape
+  secondary_metrics: [val_mae_kw, test_mape]
+  checkpoint_selection: none     # final-step weights only
+
+measure:
+  training_duration:
+    cuda_synchronize: true
+    exclude: [in_loop_eval, data_generation, model_construction]
+  inference_latency:
+    batch_size: 1
+    warmup_calls: 20
+    timed_calls: 200
+    n_windows: 100
+    index_seed: 2025
+    cuda_synchronize_each_call: true
+    mode: inference_mode
+  peak_memory:
+    kind: allocated              # max_memory_allocated, not reserved
+    reset_before_run: true
+    reset_before_inference_benchmark: true

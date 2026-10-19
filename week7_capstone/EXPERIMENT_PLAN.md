@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v3, proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v4. Build step 1 (scaffold, configs, draft PREREGISTRATION.md) is done. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -105,6 +105,26 @@ Ratings are my judgment from the Week 5 code, the course pages, and general know
 
 A "no positional encoding" arm would be a useful control, but you asked for exactly three settings, so it is optional and not in the plan.
 
+### 4.3 How each arm applies position, and the differences that cannot be removed
+
+The backbone (embedding projection, layer norms, attention, feed-forward, head, loss, optimizer, data) is shared code. The positional module is the only branch.
+
+| | A. Learned absolute | B. Sinusoidal | C. RoPE |
+|---|---|---|---|
+| Where applied | Added to the input embedding once, before block 1 | Added to the input embedding once, before block 1 | Rotation applied to **queries and keys** in **every** attention layer. Values are not rotated. Nothing is added to the input embedding |
+| Position information | Absolute index | Absolute index | Relative offset only |
+| Parameters | 168 × 64 = 10,752 learned | 0 (fixed buffer) | 0 (fixed cos/sin tables) |
+| Position indices | 0..167 | 0..167 | 0..167, rotary base 10000, head dim 16 |
+
+**Unavoidable differences, all disclosed in the documentation:**
+1. **Parameter count.** Arm A has 10,752 more parameters (about 7% of a roughly 150k-parameter model). I am not padding B and C to match, because that would add a second changed factor. The comparison is "standard implementation of each method," not "equal parameters."
+2. **Where position enters.** Input-level addition (A, B) vs per-layer rotation of q and k (C). This is what distinguishes the methods, not an implementation choice I can remove.
+3. **Absolute vs relative information.** C has no direct access to absolute hour of day. It must infer phase from the shape of the demand curve. This is why H1 is directional (PREREGISTRATION.md Section 2).
+4. **Extra compute.** C adds rotation operations per layer. This may show up as small latency and training-time differences, and is reported as a measured cost of the method.
+5. **Scale parity.** A (default embedding initialization) and B (unit-amplitude sin/cos) are added to a value embedding of unknown scale. The norm ratio is logged and checked (V6). No arm gets special scaling.
+
+The rest of the model is the same module instance type, built with identical code, and the smoke test asserts the shared backbone's initial weights are bitwise identical across arms for each seed.
+
 ## 5. Dataset and architecture
 
 ### 5.1 Dataset: seeded synthetic hourly demand
@@ -121,6 +141,7 @@ A "no positional encoding" arm would be a useful control, but you asked for exac
 - **Windows.** 168-hour context ending at midnight, next 24 hours as the target, stride 24.
 - **Estimated size (to be confirmed).** About 11,500 training windows (16 series × roughly 720 days).
 - **Normalization.** Each window divided by its own context mean, so the model predicts a ratio. Metrics are computed after converting back to demand units.
+- **Leakage rules (also in PREREGISTRATION.md Section 9).** Adjacent windows overlap by design (context 168 h, stride 24 h), so splits are defined by target time. A window belongs to the split containing its first target hour. Every training window's target and context end before the validation start. Validation and test contexts may reach back into earlier periods, because past history is known at forecast time, but no validation or test target hour appears as a target or context hour in any training window. Per-window normalization uses only the window's own context, no scaler is fitted across splits, and the gap-filling rule uses past values only. Automated tests enforce each rule (V18, V19).
 - **Same data every run.** Seeds vary model initialization, data order and dropout. They do not vary the dataset. This understates total variability and is stated in the limitations.
 
 ### 5.2 Architecture (identical except the positional module)
@@ -300,7 +321,8 @@ All times are planning guesses until the pilot measures them.
 | Stage | Purpose | Runs | Est. time |
 |---|---|---|---|
 | Smoke | Whole pipeline on a tiny slice, assertions, determinism check, P1 vs P2 timing for the selection rule | a few tiny runs | under 10 min |
-| Pilot | Per-run time and memory, convergence of all three arms, latency stability, `SD_d` estimate, δ and step count | 3 arms × seeds 900-902 (never reused) | about 20-30 min |
+| Pilot A: step calibration | Choose the step count `S` from **training loss only** | 3 arms × seed 900 × `S` in {1000, 2000, 4000} = 9 short runs | about 15-30 min |
+| Pilot B: noise and feasibility | Per-run time and memory, latency stability, sanity checks, `SD_d` feasibility check, δ context | 3 arms × seeds 900-902 at the chosen `S` = 9 runs | about 15-30 min |
 | Main | The study | 3 arms × seeds 0, 1, 2 = 9, plus the latency benchmark per run | about 15-35 min |
 | Optional extension | Seeds 3 and 4, only if declared up front and the Stage-1 verdict calls for it | +6 | about 10-25 min |
 | Retry allowance | One full re-run of any interrupted seed block | up to 3 | included in the projection |
@@ -324,9 +346,11 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 | V11 | Environment pin | `pip freeze` captured on the real Colab runtime | Lockfile recorded with the Colab image date | Pin what Colab provides (torch is preinstalled, not reinstalled) |
 | V12 | Run-to-run timing noise on a shared free-tier GPU | Pilot repeats | Timing spread reported with every time claim | Report as measured, no stronger claims |
 | V13 | Can I reach EUR-Lex to read Annex IV? | Try to fetch | Official text retrieved | You paste or upload the official text. I do not write Annex IV content from memory. |
-| V14 | Size of the deterministic-mode penalty and the resulting policy | Smoke P1 vs P2 timing, then the 6.4 rule | Policy selected and frozen | Adopt P2 and document the measured penalty |
+| V14 | Size of the deterministic-mode penalty and the resulting policy | Smoke P1 vs P2 timing, then the 6.4 rule | Policy selected by projected GPU time only, not by any accuracy figure, and frozen | Adopt P2 and document the measured penalty |
 | V15 | Is batch-1 latency stable enough to compare arms? | Pilot: repeat the latency benchmark within and across runs | Spread across repeats small relative to any arm difference, or reported as inconclusive | Raise timed calls; otherwise report latency as inconclusive |
 | V16 | Does inference peak memory exclude training state? | Smoke: check resident allocated memory after cleanup is about the weight size | Yes | Move the latency benchmark to a second process that loads saved weights |
+| V18 | No train/validation/test leakage in the generated windows | Unit tests on the arrays: max train context and target time < validation start, no validation or test target hour in any training window, per-window normalization only, gap fill uses past values only | All assertions pass | Fix the windowing or generator before any pilot |
+| V19 | Do the leakage tests actually catch a violation? | Deliberately build a leaking split in a test and confirm the assertions fail | Test fails on the leaking split | Fix the tests |
 | V17 | Does the session manifest capture GPU UUID and versions? | Smoke: inspect the manifest, and simulate an interrupted run | `.running` marker left, attempt 2 recorded | Fix the driver |
 
 ## 11. Annex IV documentation plan (3-5 pages)
@@ -428,6 +452,15 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - **Interrupted sessions (D10):** added attempt counters, interruption markers, a session manifest, a definition of uninterrupted vs resumed, and the consequences for timing comparisons and the "single session" claim.
 - **Diffusion:** stated explicitly that it is not used and why.
 - **Budget:** noted the overnight assumption and set a three-hour planning ceiling pending Q5.
+
+## 18. Changes from v3
+
+- Build step 1 completed: `configs/`, `PREREGISTRATION.md` (draft, unfrozen), `README.md` stub, folder skeleton.
+- Added Section 4.3: how each arm applies position (RoPE on queries and keys in every layer), and the unavoidable differences.
+- Added leakage rules and tests (V18, V19). Splits are defined by target time because adjacent windows overlap.
+- Split the pilot into step calibration (training loss only) and a noise/feasibility pilot, so validation error plays no part in choosing the step count.
+- δ derived from scale information only. k provisional at 2, changeable only by logged amendment before the freeze.
+- Determinism policy selection made explicitly feasibility-only.
 
 ## 17. Changes from v2
 

@@ -1,0 +1,3 @@
+# Arm C. The only field that differs between arm configs.
+model:
+  pos_encoding: rope
