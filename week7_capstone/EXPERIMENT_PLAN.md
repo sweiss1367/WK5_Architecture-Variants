@@ -514,3 +514,24 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - `calibrate.py`: step budget from a whitelist of training-loss fields only, tested against adversarial validation values.
 - Gates added to `run_ablation.py` (Section 6.7). The notebook is smoke-only.
 - Dataset tensors are now freed before the inference-memory measurement, so inference memory is not inflated by the resident dataset.
+
+## 21. Smoke observations, first Colab session (PARTIAL, from the executed notebook only)
+
+**Source.** `results/smoke/week7_step3_smoke_executed_partial.ipynb`, uploaded by the user. Cells 1-4 have output. Cells 5-7 (smoke checks, summary, zip) have **no output**, so the JSON files (decision, timing, checks, manifest) were not received. Everything below is read from printed notebook output, not from the result files.
+
+**Environment.** Tesla T4 (15,360 MiB), driver 580.82.07, CUDA 13.0, PyTorch 2.11.0+cu130, Python 3.13.15, numpy 2.1.3, PyYAML 6.0.3. Code commit `0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce`, which matches the pushed commit. `requirements.lock.txt` in this repo is reconstructed from the versions printed in that session (its header says so).
+
+**What the output supports**
+- Policy P1 (deterministic algorithms, math attention backend) completed all 12 timed runs plus the warm-up on the T4 without error. No CUDA operation in the training or inference path raised under deterministic mode.
+- Fitted P1 vs P2 train-step time: A 51.75 vs 38.92 ms (+33%), B 53.91 vs 43.54 (+24%), C 69.57 vs 52.91 (+32%). Batch-1 inference p50: P1 4.7, 4.7, 5.3 ms vs P2 3.7, 3.5, 4.2 ms.
+- Process start-up overhead (wall minus train) was 5.3-6.5 s per run.
+- Projected total for 27 runs at 4000 steps, slowest arm: P1 2.13 h, P2 1.65 h, ceiling 3 h. The feasibility rule selected **P1**.
+
+**Robustness of that decision (my recomputation from the printed per-run times).** Using the slowest single repetition for every arm, the P1 projection is 2.5 h, still under 3 h. The decision does not depend on which repetition is believed.
+
+**Caveats the numbers carry**
+- **Timing is noisy.** The same configuration varied 2-32% between repetitions (P1 at S=600 was 1.16-1.32 times slower in repetition 1; P2 1.02-1.22). The per-run P1 penalty at S=600 ranged from +20% to +45%, and the +24-33% figures come from a fit over two repetitions. Quote the penalty as a range of about 20-45%, not a single number.
+- **Arm timing in this benchmark is confounded with position.** `choose_policy.py` ran arms in the fixed order A, B, C within each repetition, so drift or GPU warming is tied to arm C. C looked about 30-45% slower than A in both policies, and B was 0-20% slower than A. These are **not** findings about the cost of RoPE. The main study rotates arm order by seed for this reason.
+- The latency and memory columns here come from smoke-length runs and say nothing yet about the study.
+
+**Not yet verified (no output received):** V4 determinism reruns (same-seed bitwise equality under P1, and P2 for information), V5 shared-initialization identity across arms on GPU, V6 embedding scale, V7 demand floor, V16 inference-memory cleanliness, and the unit tests on the GPU machine. Also not received: the decision file, the timing file, the session manifest, and `data/*.sha256` for the 16-series dataset.

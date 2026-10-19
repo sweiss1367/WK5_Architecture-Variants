@@ -1,0 +1,6 @@
+# Reconstructed from the output of `check_env.py --auto` printed in the Colab session of 2026-10-19 (Tesla T4, python 3.13.15).
+# The original file was written to the ephemeral Colab runtime and was not received; see results/smoke/week7_step3_smoke_executed_partial.ipynb.
+# python 3.13
+torch==2.11.0+cu130
+numpy==2.1.3
+PyYAML==6.0.3
