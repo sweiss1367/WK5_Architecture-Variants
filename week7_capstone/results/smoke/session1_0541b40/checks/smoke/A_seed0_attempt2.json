@@ -1,0 +1,76 @@
+{
+ "status": "completed",
+ "stage": "smoke",
+ "arm": "A",
+ "seed": 0,
+ "attempt": 2,
+ "session_id": "smoke-checks",
+ "segment": 1,
+ "policy": "P1",
+ "started_utc": "2026-10-19T18:20:25.536248+00:00",
+ "pos_encoding": "learned",
+ "steps": 100,
+ "env": {
+  "host": "7ca0691ad80e",
+  "python": "3.13.15",
+  "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "device_type": "cuda",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce",
+  "git_dirty": false,
+  "gpu_name": "Tesla T4",
+  "gpu_memory_gb": 15.64,
+  "gpu_uuid": "GPU-b4afd0de-fba1-5e94-8c57-5aebd3ef4427",
+  "driver": "580.82.07"
+ },
+ "config_sha256": "e0e4e14ca3b710a47c90b57736b83d1e6d54ab41fb20ab994a6ef5dbfdc14b50",
+ "gates": {},
+ "cpu_debug": false,
+ "val_mape": 8.865393828960523,
+ "val_mae_kw": 102.84350348654247,
+ "test_mape": 8.34968346393027,
+ "baselines": {
+  "seasonal_naive_day_val_mape": 7.081063263463845,
+  "same_hour_last_week_val_mape": 7.171450287852259,
+  "seasonal_naive_day_test_mape": 6.781527490377695,
+  "same_hour_last_week_test_mape": 6.406692973626551
+ },
+ "timing_only": false,
+ "train_seconds": 5.994575231999988,
+ "train_peak_alloc_mb": 623.23681640625,
+ "train_steps_per_second": 16.681749103119806,
+ "inference_latency_ms": {
+  "p50_ms": 4.411420999986149,
+  "p95_ms": 5.369500349729605,
+  "mean_ms": 4.573030979995565,
+  "std_ms": 0.618230804018083,
+  "n_calls": 200
+ },
+ "inference_peak_alloc_mb": 66.90869140625,
+ "resident_alloc_before_inference_mb": 65.62744140625,
+ "final_train_loss_100": 0.10537631064653397,
+ "train_loss_curve": [
+  {
+   "step": 100,
+   "mean_train_loss": 0.10537631064653397
+  }
+ ],
+ "params": {
+  "total": 162520,
+  "positional": 10752
+ },
+ "init_weights_sha256": "3a8c59845b504e9836df3f902f860772a3b0b32156fdcf8787c9a13d18daba2f",
+ "shared_init_weights_sha256": "62be9675a6e2a6615c286f045d275d8ef5eebe0630f13bbcea6493b3eed6b1b6",
+ "final_weights_sha256": "b5227bed1a07d0c5ca7c330d420c942c7c8285712473a6afb03652f0573e771e",
+ "value_embedding_norm": 6.3523268699646,
+ "positional_term_norm": 8.017065048217773,
+ "n_windows": {
+  "train": 11568,
+  "val": 2912,
+  "test": 2928
+ },
+ "data_sha256": "65d899e60a00802062ac5c9c0dc5202d8d5ed6e6a0d64cba593e8985fc53f695",
+ "finished_utc": "2026-10-19T18:20:33.981233+00:00"
+}

@@ -35,9 +35,6 @@ import time
 import traceback
 from datetime import datetime, timezone
 
-# Must be set before the first CUDA call for deterministic cuBLAS (policy P1).
-os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -80,13 +77,17 @@ def seed_all(seed):
         torch.cuda.manual_seed_all(seed)
 
 
-def apply_determinism(policy):
-    """P1: deterministic algorithms + math attention backend. P2: seeded only, default kernels."""
+def configure_policy(policy):
+    """P1: deterministic algorithms, cuDNN deterministic, CUBLAS_WORKSPACE_CONFIG=:4096:8, math attention backend.
+    P2: seeded only, everything default. CUBLAS_WORKSPACE_CONFIG is set for P1 only and removed for P2, so P2 really
+    is default and the P1-vs-P2 timing includes the cuBLAS workspace setting. Call before the first CUDA matmul."""
     if policy == "P1":
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
         torch.use_deterministic_algorithms(True)
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
     else:
+        os.environ.pop("CUBLAS_WORKSPACE_CONFIG", None)
         torch.use_deterministic_algorithms(False)
 
 
@@ -373,9 +374,9 @@ def main():
         fail("no GPU found; CPU runs are only allowed in the smoke stage (or with --allow-cpu for debugging)")
 
     policy = cfg["determinism"]["policy"]
+    configure_policy(policy)
     info = env_info(device)
     gates = enforce_gates(args, cfg, st, info)
-    apply_determinism(policy)
     run_dir = os.path.join(args.out, st)
     os.makedirs(run_dir, exist_ok=True)
     os.makedirs(os.path.dirname(args.manifest) or ".", exist_ok=True)
@@ -391,7 +392,8 @@ def main():
     session_id = args.session_id or default_session_id()
     segment = ensure_segment(args.manifest, session_id, info, policy)
     record = {"status": "failed", "stage": st, "arm": arm, "seed": args.seed, "attempt": attempt,
-              "session_id": session_id, "segment": segment, "policy": policy, "started_utc": now(),
+              "session_id": session_id, "segment": segment, "policy": policy, "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+              "started_utc": now(),
               "pos_encoding": cfg["model"]["pos_encoding"], "steps": cfg["train"]["steps"], "env": info,
               "config_sha256": hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest(), "gates": gates,
               "cpu_debug": device.type == "cpu"}

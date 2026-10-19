@@ -2,10 +2,11 @@
 
     python src/choose_policy.py
 
+Session ids are the default (the VM boot id), so the manifest counts Colab sessions, not scripts.
 Each timing run is the real run_ablation.py script in a fresh process (as in the study), in the smoke stage with
 --timing-only, so it never computes validation or test accuracy. P1 and P2 get exactly the same command line apart
 from --policy: same arms, seed, data, step counts and batch size. The order of the two policies alternates between
-repetitions so drift in GPU clocks or temperature is not tied to one policy.
+repetitions so drift in GPU clocks or temperature is not tied to one policy, and the arm order rotates by repetition.
 
 Sequence (matches PREREGISTRATION.md Section 8):
   1. measure and write results/smoke/policy_timing/policy_timing.json
@@ -45,15 +46,21 @@ def sh(cmd):
         return None
 
 
+def rotated(arms, rep):
+    """Arm order for repetition `rep`: a cyclic shift, so no arm is always last."""
+    k = rep % len(arms)
+    return arms[k:] + arms[:k]
+
+
 def gpu_state():
     q = "name,uuid,driver_version,clocks.sm,clocks.max.sm,temperature.gpu,power.draw,utilization.gpu"
     return sh(["nvidia-smi", f"--query-gpu={q}", "--format=csv"])
 
 
-def run_one(root, arm, steps, policy, out, extra, session_id, manifest):
+def run_one(root, arm, steps, policy, out, extra, manifest):
     cmd = [sys.executable, os.path.join(root, "src", "run_ablation.py"), "--config", f"configs/arm_{arm}.yaml",
            "--seed", "0", "--stage", "smoke", "--steps", str(steps), "--policy", policy, "--timing-only",
-           "--out", out, "--manifest", manifest, "--session-id", session_id, *extra]
+           "--out", out, "--manifest", manifest, *extra]
     t0 = time.perf_counter()
     p = subprocess.run(cmd, capture_output=True, text=True, cwd=root)
     wall = time.perf_counter() - t0
@@ -108,20 +115,19 @@ def main():
         sys.exit("No GPU found. Policy timing must run on the Colab GPU (use --allow-cpu only to debug the script).")
     os.makedirs(args.out, exist_ok=True)
     extra = ["--n-series", str(args.n_series)] if args.n_series else []
-    session_id = f"policy-timing-{int(time.time())}"
     s1, s2 = sorted(args.steps)
 
     state_before = gpu_state()
     print("warm-up run (discarded) ...", flush=True)
-    run_one(root, args.arms[0], 100, "P1", args.out, extra, session_id, args.manifest)
+    run_one(root, args.arms[0], 100, "P1", args.out, extra, args.manifest)
 
     rows = []
     for rep in range(args.reps):
         order = POLICIES if rep % 2 == 0 else POLICIES[::-1]
-        for arm in args.arms:
+        for arm in rotated(args.arms, rep):
             for steps in (s1, s2):
                 for pol in order:
-                    rows.append(run_one(root, arm, steps, pol, args.out, extra, session_id, args.manifest))
+                    rows.append(run_one(root, arm, steps, pol, args.out, extra, args.manifest))
                     print(f"  rep {rep} {arm} S={steps} {pol}: train {rows[-1]['train_seconds']:.1f}s wall {rows[-1]['wall_s']:.1f}s", flush=True)
     state_after = gpu_state()
     summ = summarize(rows, args.arms, [s1, s2])

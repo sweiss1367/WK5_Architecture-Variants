@@ -1,0 +1,85 @@
+{
+ "created_utc": "2026-10-19T18:03:54.845907+00:00",
+ "selected_policy": "P1",
+ "accuracy_used": false,
+ "rule": "Select P1 if the projected total GPU time of the remaining study (27 runs, each at 4000 steps, slowest arm) under P1 is at most the planning ceiling; otherwise select P2. Accuracy is not used.",
+ "run_plan": {
+  "calibration_stage1": 3,
+  "calibration_stage2": 4,
+  "noise_pilot": 2,
+  "main": 9,
+  "extension": 6,
+  "retry_allowance": 3
+ },
+ "runs_projected": 27,
+ "s_max": 4000,
+ "ceiling_hours": 3.0,
+ "projected_total_hours": {
+  "P1": 2.1335969976468716,
+  "P2": 1.6456591772493816
+ },
+ "slowest_arm_run_seconds_at_Smax": {
+  "P1": 284.47959968624957,
+  "P2": 219.4212236332509
+ },
+ "measured_penalty_percent_train_step": {
+  "A": 32.973659600596065,
+  "B": 23.812190855335835,
+  "C": 31.48683455427279
+ },
+ "feasible_under_selected": true,
+ "env": {
+  "torch": "2.11.0+cu130",
+  "cuda_runtime": "13.0",
+  "python": "3.13.15",
+  "gpu_name": "Tesla T4",
+  "gpu_state_before": "name, uuid, driver_version, clocks.current.sm [MHz], clocks.max.sm [MHz], temperature.gpu, power.draw [W], utilization.gpu [%]\nTesla T4, GPU-b4afd0de-fba1-5e94-8c57-5aebd3ef4427, 580.82.07, 300 MHz, 1590 MHz, 43, 13.42 W, 0 %",
+  "gpu_state_after": "name, uuid, driver_version, clocks.current.sm [MHz], clocks.max.sm [MHz], temperature.gpu, power.draw [W], utilization.gpu [%]\nTesla T4, GPU-b4afd0de-fba1-5e94-8c57-5aebd3ef4427, 580.82.07, 690 MHz, 1590 MHz, 73, 30.17 W, 9 %",
+  "git_commit": "0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce"
+ },
+ "conditions": {
+  "arms": [
+   "A",
+   "B",
+   "C"
+  ],
+  "seed": 0,
+  "step_counts": [
+   200,
+   600
+  ],
+  "repetitions": 2,
+  "warmup_run_discarded": true,
+  "order": "policy order alternates each repetition",
+  "one_fresh_process_per_run": true,
+  "stage": "smoke",
+  "timing_only": true,
+  "accuracy_computed": false,
+  "batch_size": 128,
+  "n_series": 16,
+  "model": {
+   "pos_encoding": null,
+   "d_model": 64,
+   "n_layers": 3,
+   "n_heads": 4,
+   "d_ff": 256,
+   "dropout": 0.1,
+   "head": "mean_pool",
+   "rope_base": 10000,
+   "precision": "fp32"
+  },
+  "latency_protocol": {
+   "batch_size": 1,
+   "warmup_calls": 20,
+   "timed_calls": 200,
+   "n_windows": 100,
+   "index_seed": 2025,
+   "cuda_synchronize_each_call": true,
+   "mode": "inference_mode"
+  },
+  "identical_workload_for_both_policies": true,
+  "cpu_debug": false
+ },
+ "timing_file": "results/smoke/policy_timing/policy_timing.json",
+ "note": "Set determinism.policy in configs/base.yaml to selected_policy by hand and commit it. run_ablation.py refuses to run if the config and this file disagree. cpu_debug=true means these timings are not usable."
+}

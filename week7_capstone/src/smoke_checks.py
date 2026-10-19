@@ -1,5 +1,5 @@
 """Smoke-stage checks that need a real run: V4 determinism, V5 shared initialization, V6 embedding scale,
-V7 demand floor, V16 inference-memory cleanliness, plus the unit tests.
+V7 demand floor, V16 inference-memory baseline, plus the unit tests.
 
     python src/smoke_checks.py
 
@@ -25,11 +25,47 @@ from make_data import generate_or_load  # noqa: E402
 def run_one(root, arm, policy, steps, out, manifest, extra):
     cmd = [sys.executable, os.path.join(root, "src", "run_ablation.py"), "--config", f"configs/arm_{arm}.yaml",
            "--seed", "0", "--stage", "smoke", "--steps", str(steps), "--policy", policy, "--out", out,
-           "--manifest", manifest, "--session-id", "smoke-checks", *extra]
+           "--manifest", manifest, *extra]
     p = subprocess.run(cmd, capture_output=True, text=True, cwd=root)
     if p.returncode != 0:
         raise RuntimeError(f"run failed ({arm}, {policy}):\n{p.stderr[-2000:]}")
     return json.load(open([l for l in p.stdout.splitlines() if "->" in l][-1].split("-> ")[-1]))
+
+
+PROBE = """
+import json, sys, torch, yaml
+sys.path.insert(0, "src")
+from run_ablation import attention_context, configure_policy
+import model as M
+policy, arm = sys.argv[1], sys.argv[2]
+configure_policy(policy)
+m = yaml.safe_load(open("configs/base.yaml"))["model"]
+m["pos_encoding"] = {"A": "learned", "B": "sinusoidal", "C": "rope"}[arm]
+mib = lambda: torch.cuda.memory_allocated() / 2**20
+with attention_context(policy):
+    model = M.build_model(m, 168, 24, 0).cuda()
+    built = mib()
+    out = model(torch.randn(8, 168, device="cuda")); out.sum().backward()      # one forward and backward, tiny batch
+    after = mib()
+    del out; model.zero_grad(set_to_none=True); torch.cuda.empty_cache()
+print(json.dumps({"after_model_build_mb": built, "after_forward_backward_mb": after, "resident_after_cleanup_mb": mib()}))
+"""
+V16_TOLERANCE_MB = 1.0
+
+
+def probe(root, policy, arm):
+    p = subprocess.run([sys.executable, "-c", PROBE, policy, arm], capture_output=True, text=True, cwd=root)
+    if p.returncode != 0:
+        raise RuntimeError(f"memory probe failed ({policy}, {arm}):\n{p.stderr[-1500:]}")
+    return json.loads(p.stdout.strip().splitlines()[-1])
+
+
+def v16_verdict(run_resident_mb, probe_resident_mb, tol=V16_TOLERANCE_MB):
+    """A run passes if, after cleanup, it holds no more GPU memory than a fresh process that has only built the model
+    and done one forward and backward pass. The probe has no dataset and no optimizer, so anything extra in the run
+    (leftover data, optimizer state, gradients) shows up as a positive difference."""
+    diff = run_resident_mb - probe_resident_mb
+    return abs(diff) <= tol, diff
 
 
 def main():
@@ -93,14 +129,23 @@ def main():
          "outlier_hours": meta["outlier_hours"], "gap_hours": meta["gap_hours"]})
 
     if on_gpu:
-        res = {}
+        # Old criterion (resident <= 1.5 x parameter bytes + 8 MB) was mis-specified: PyTorch counts cuBLAS and cuBLASLt
+        # workspaces as allocated memory, and the first Colab session showed a constant 65.0075 MiB beyond parameters and
+        # buffers in every run (= 2 x 32 MiB + 1 MiB + 0.0075 MiB). The baseline is now measured, not assumed.
+        probes = {(pol, arm): probe(root, pol, arm) for pol, arm in (("P1", "A"), ("P1", "B"), ("P1", "C"), ("P2", "B"))}
+        res, ok = {}, True
         for k, r in runs.items():
-            param_mb = r["params"]["total"] * 4 / 2**20
-            res[k] = {"resident_mb": r["resident_alloc_before_inference_mb"], "param_mb": param_mb,
-                      "infer_peak_mb": r["inference_peak_alloc_mb"]}
-        ok = all(v["resident_mb"] <= 1.5 * v["param_mb"] + 8 for v in res.values())
+            pol, arm = r["policy"], r["arm"]
+            good, diff = v16_verdict(r["resident_alloc_before_inference_mb"], probes[(pol, arm)]["resident_after_cleanup_mb"])
+            ok &= good
+            res[k] = {"run_resident_mb": r["resident_alloc_before_inference_mb"],
+                      "probe_resident_mb": probes[(pol, arm)]["resident_after_cleanup_mb"], "difference_mb": diff,
+                      "infer_peak_mb": r["inference_peak_alloc_mb"],
+                      "infer_peak_above_resident_mb": r["inference_peak_alloc_mb"] - r["resident_alloc_before_inference_mb"]}
         add("V16_inference_memory_excludes_training_state", "PASS" if ok else "FAIL",
-            {"per_run": res, "criterion": "resident allocated memory <= 1.5 x parameter bytes + 8 MB"})
+            {"per_run": res, "probes": {f"{p}_{a}": v for (p, a), v in probes.items()},
+             "criterion": f"run resident memory within {V16_TOLERANCE_MB} MiB of a fresh process that built the model and did "
+                          "one forward+backward on a tiny batch (no dataset, no optimizer)"})
     else:
         add("V16_inference_memory_excludes_training_state", "SKIP", "no GPU", required=False)
 

@@ -1,0 +1,32 @@
+[
+ {
+  "segment": 0,
+  "session_id": "policy-timing-1792432381",
+  "first_seen_utc": "2026-10-19T17:53:08.118704+00:00",
+  "policy": "P1",
+  "host": "7ca0691ad80e",
+  "gpu_name": "Tesla T4",
+  "gpu_uuid": "GPU-b4afd0de-fba1-5e94-8c57-5aebd3ef4427",
+  "driver": "580.82.07",
+  "cuda_runtime": "13.0",
+  "torch": "2.11.0+cu130",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce",
+  "device_type": "cuda"
+ },
+ {
+  "segment": 1,
+  "session_id": "smoke-checks",
+  "first_seen_utc": "2026-10-19T18:03:59.823025+00:00",
+  "policy": "P1",
+  "host": "7ca0691ad80e",
+  "gpu_name": "Tesla T4",
+  "gpu_uuid": "GPU-b4afd0de-fba1-5e94-8c57-5aebd3ef4427",
+  "driver": "580.82.07",
+  "cuda_runtime": "13.0",
+  "torch": "2.11.0+cu130",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce",
+  "device_type": "cuda"
+ }
+]

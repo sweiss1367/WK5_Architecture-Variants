@@ -1,0 +1,174 @@
+{
+ "created_utc": "2026-10-19T18:23:54.974259+00:00",
+ "steps": 100,
+ "gpu": true,
+ "torch": "2.11.0+cu130",
+ "cuda_runtime": "13.0",
+ "gpu_name": "Tesla T4",
+ "checks": [
+  {
+   "id": "V4_P1_same_seed_rerun",
+   "status": "PASS",
+   "required": false,
+   "detail": {
+    "bitwise_identical_weights": true,
+    "identical_val_mape": true,
+    "abs_val_mape_difference": 0.0,
+    "meaning": "P1 is expected to be bitwise identical. A WARN means the determinism limit must be documented as part of the noise floor. P2 is informational: it shows how much residual nondeterminism P2 carries."
+   }
+  },
+  {
+   "id": "V4_P2_same_seed_rerun",
+   "status": "INFO",
+   "required": false,
+   "detail": {
+    "bitwise_identical_weights": false,
+    "identical_val_mape": false,
+    "abs_val_mape_difference": 4.3456470422142957e-08,
+    "meaning": "P1 is expected to be bitwise identical. A WARN means the determinism limit must be documented as part of the noise floor. P2 is informational: it shows how much residual nondeterminism P2 carries."
+   }
+  },
+  {
+   "id": "V5_shared_init_identical_across_arms_and_processes",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "distinct_hashes": 1,
+    "runs": [
+     "B_P1_1",
+     "B_P1_2",
+     "B_P2_1",
+     "B_P2_2",
+     "A_P1_1",
+     "C_P1_1"
+    ]
+   }
+  },
+  {
+   "id": "V6_positional_vs_value_embedding_scale",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "ratio_positional_to_value_norm": {
+     "A": 1.2620674616296077,
+     "B": 0.890516856024282
+    },
+    "criterion": "within [0.1, 10], i.e. the same order of magnitude"
+   }
+  },
+  {
+   "id": "V7_demand_floor_keeps_mape_stable",
+   "status": "PASS",
+   "required": true,
+   "detail": {
+    "min_demand_over_base": 0.5477623675974218,
+    "criterion": ">= 0.1",
+    "data_sha256": "65d899e60a00802062ac5c9c0dc5202d8d5ed6e6a0d64cba593e8985fc53f695",
+    "outlier_hours": 196,
+    "gap_hours": 270
+   }
+  },
+  {
+   "id": "V16_inference_memory_excludes_training_state",
+   "status": "FAIL",
+   "required": true,
+   "detail": {
+    "per_run": {
+     "B_P1_1": {
+      "resident_mb": 65.62744140625,
+      "param_mb": 0.578948974609375,
+      "infer_peak_mb": 66.90869140625
+     },
+     "B_P1_2": {
+      "resident_mb": 65.62744140625,
+      "param_mb": 0.578948974609375,
+      "infer_peak_mb": 66.90869140625
+     },
+     "B_P2_1": {
+      "resident_mb": 65.62744140625,
+      "param_mb": 0.578948974609375,
+      "infer_peak_mb": 66.14306640625
+     },
+     "B_P2_2": {
+      "resident_mb": 65.62744140625,
+      "param_mb": 0.578948974609375,
+      "infer_peak_mb": 66.14306640625
+     },
+     "A_P1_1": {
+      "resident_mb": 65.62744140625,
+      "param_mb": 0.619964599609375,
+      "infer_peak_mb": 66.90869140625
+     },
+     "C_P1_1": {
+      "resident_mb": 65.64794921875,
+      "param_mb": 0.578948974609375,
+      "infer_peak_mb": 67.01123046875
+     }
+    },
+    "criterion": "resident allocated memory <= 1.5 x parameter bytes + 8 MB"
+   }
+  },
+  {
+   "id": "leakage_checks_inside_every_run",
+   "status": "PASS",
+   "required": true,
+   "detail": "check_no_leakage runs inside every run_ablation.py run; all runs completed"
+  },
+  {
+   "id": "unit_tests",
+   "status": "PASS",
+   "required": true,
+   "detail": "50 passed in 87.66s (0:01:27)"
+  }
+ ],
+ "runs": {
+  "B_P1_1": {
+   "policy": "P1",
+   "arm": "B",
+   "file_attempt": 9,
+   "val_mape_not_used_for_decisions": 8.869370315508798,
+   "train_seconds": 5.202649678999933,
+   "final_weights_sha256": "09e9e9fc5ac3bc473ea4c9ca31862532f74dfc35c4de0bb423eb744c0e0cb39f"
+  },
+  "B_P1_2": {
+   "policy": "P1",
+   "arm": "B",
+   "file_attempt": 10,
+   "val_mape_not_used_for_decisions": 8.869370315508798,
+   "train_seconds": 5.66691934399978,
+   "final_weights_sha256": "09e9e9fc5ac3bc473ea4c9ca31862532f74dfc35c4de0bb423eb744c0e0cb39f"
+  },
+  "B_P2_1": {
+   "policy": "P2",
+   "arm": "B",
+   "file_attempt": 11,
+   "val_mape_not_used_for_decisions": 8.869370387933042,
+   "train_seconds": 3.958091688999957,
+   "final_weights_sha256": "35d2c49fcda97f7b1f461639144ad80a64182493e325fbfc8830379c40588384"
+  },
+  "B_P2_2": {
+   "policy": "P2",
+   "arm": "B",
+   "file_attempt": 12,
+   "val_mape_not_used_for_decisions": 8.869370344476572,
+   "train_seconds": 3.757684139000048,
+   "final_weights_sha256": "ef9a77b2887312bf112421d6ee533b60f6978bd4efb7ef44dd04c87810abffe6"
+  },
+  "A_P1_1": {
+   "policy": "P1",
+   "arm": "A",
+   "file_attempt": 3,
+   "val_mape_not_used_for_decisions": 8.865393828960523,
+   "train_seconds": 5.3786782060001315,
+   "final_weights_sha256": "b5227bed1a07d0c5ca7c330d420c942c7c8285712473a6afb03652f0573e771e"
+  },
+  "C_P1_1": {
+   "policy": "P1",
+   "arm": "C",
+   "file_attempt": 3,
+   "val_mape_not_used_for_decisions": 8.83775608673584,
+   "train_seconds": 6.427366467999946,
+   "final_weights_sha256": "5fdf860e224389c32bec3072983bcb6bbfe58d1a4e0b23dfd6696c4395a7e83f"
+  }
+ }
+}
