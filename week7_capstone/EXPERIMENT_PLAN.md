@@ -515,23 +515,40 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - Gates added to `run_ablation.py` (Section 6.7). The notebook is smoke-only.
 - Dataset tensors are now freed before the inference-memory measurement, so inference memory is not inflated by the resident dataset.
 
-## 21. Smoke observations, first Colab session (PARTIAL, from the executed notebook only)
+## 21. Smoke observations, first Colab session
 
-**Source.** `results/smoke/week7_step3_smoke_executed_partial.ipynb`, uploaded by the user. Cells 1-4 have output. Cells 5-7 (smoke checks, summary, zip) have **no output**, so the JSON files (decision, timing, checks, manifest) were not received. Everything below is read from printed notebook output, not from the result files.
+**Source.** `results/smoke/week7_step3_smoke_executed.ipynb`, the executed notebook uploaded by the user (all cells ran, same runtime throughout). The JSON result files (decision, timing, checks, manifest, env report, pip freeze, data hash) were zipped in the notebook's last cell but **have not been received**. Everything below is read from printed notebook output, and the numbers behind the check statuses are not yet in hand.
 
 **Environment.** Tesla T4 (15,360 MiB), driver 580.82.07, CUDA 13.0, PyTorch 2.11.0+cu130, Python 3.13.15, numpy 2.1.3, PyYAML 6.0.3. Code commit `0541b40a7ba40cdf55fe4faa1749462ac1f0f7ce`, which matches the pushed commit. `requirements.lock.txt` in this repo is reconstructed from the versions printed in that session (its header says so).
 
-**What the output supports**
-- Policy P1 (deterministic algorithms, math attention backend) completed all 12 timed runs plus the warm-up on the T4 without error. No CUDA operation in the training or inference path raised under deterministic mode.
-- Fitted P1 vs P2 train-step time: A 51.75 vs 38.92 ms (+33%), B 53.91 vs 43.54 (+24%), C 69.57 vs 52.91 (+32%). Batch-1 inference p50: P1 4.7, 4.7, 5.3 ms vs P2 3.7, 3.5, 4.2 ms.
-- Process start-up overhead (wall minus train) was 5.3-6.5 s per run.
-- Projected total for 27 runs at 4000 steps, slowest arm: P1 2.13 h, P2 1.65 h, ceiling 3 h. The feasibility rule selected **P1**.
+### 21.1 Policy timing (feasibility only)
+- P1 (deterministic algorithms, math attention backend) completed all 12 timed runs plus the warm-up on the T4 without error.
+- Fitted P1 vs P2 train-step time: A 51.75 vs 38.92 ms (+33%), B 53.91 vs 43.54 (+24%), C 69.57 vs 52.91 (+32%). Batch-1 inference p50: P1 4.7, 4.7, 5.3 ms vs P2 3.7, 3.5, 4.2 ms. Process start-up overhead was 5.3-6.5 s per run.
+- Projected total for 27 runs at 4000 steps, slowest arm: P1 2.13 h, P2 1.65 h, ceiling 3 h. The feasibility rule selected **P1**, with accuracy not used (`accuracy_used: False`). Using the slowest single repetition for every arm the P1 projection is 2.5 h, still under the ceiling.
+- **Timing is noisy.** The same configuration varied 2-32% between repetitions, and the per-run P1 penalty at S=600 ranged from +20% to +45%. Quote the penalty as a range of about 20-45%.
+- **Arm timing in this benchmark is confounded with position.** Arms always ran in the order A, B, C within a repetition, so drift is tied to arm C. The apparent 30-45% slowdown of C (and 0-20% of B) is **not** a finding about RoPE. The main study rotates arm order by seed.
+- **P2 was not exactly "default kernels".** `run_ablation.py` sets `CUBLAS_WORKSPACE_CONFIG=:4096:8` for every run at import time, including P2. The measured P1-vs-P2 difference therefore reflects deterministic algorithms, the cuDNN flags and the math attention backend, but not the cuBLAS workspace setting. This does not change the P1 decision, since P1 was selected, but it contradicts the definition of P2 in Section 6.4 and needs to be fixed in code and re-measured.
 
-**Robustness of that decision (my recomputation from the printed per-run times).** Using the slowest single repetition for every arm, the P1 projection is 2.5 h, still under 3 h. The decision does not depend on which repetition is believed.
+### 21.2 Smoke checks (statuses from the notebook; details not yet received)
+| Check | Status | Meaning |
+|---|---|---|
+| V4 P1 same-seed rerun | PASS | Two identical runs under P1 gave bitwise-identical weights and identical validation MAPE on this T4 |
+| V4 P2 same-seed rerun | INFO (not identical) | P2 is not bitwise reproducible on this GPU. The size of the difference is in the check detail, not yet seen. This supports choosing P1 for the study |
+| V5 shared initialization | PASS | Shared backbone weights identical across arms A, B, C and across processes, on the GPU |
+| V6 embedding scale | PASS | Positional term and value embedding within one order of magnitude |
+| V7 demand floor | PASS | Minimum demand over base load at least 0.1, so MAPE is stable |
+| Leakage checks | PASS | Ran inside every run, all completed |
+| Unit tests | PASS | Whole suite, including the run gates, passes on the GPU machine |
+| **V16 inference memory** | **FAIL** | Resident GPU memory after cleanup exceeded 1.5 × parameter bytes + 8 MB (about 9 MB) in at least one run. The actual values are in the check detail and have not been seen |
 
-**Caveats the numbers carry**
-- **Timing is noisy.** The same configuration varied 2-32% between repetitions (P1 at S=600 was 1.16-1.32 times slower in repetition 1; P2 1.02-1.22). The per-run P1 penalty at S=600 ranged from +20% to +45%, and the +24-33% figures come from a fit over two repetitions. Quote the penalty as a range of about 20-45%, not a single number.
-- **Arm timing in this benchmark is confounded with position.** `choose_policy.py` ran arms in the fixed order A, B, C within each repetition, so drift or GPU warming is tied to arm C. C looked about 30-45% slower than A in both policies, and B was 0-20% slower than A. These are **not** findings about the cost of RoPE. The main study rotates arm order by seed for this reason.
-- The latency and memory columns here come from smoke-length runs and say nothing yet about the study.
+### 21.3 V16: what is known and what is not
+- **Known.** The check failed. By construction it fails when `resident_alloc_before_inference_mb` exceeds about 9 MB. The models are about 0.6 MB.
+- **Likely cause (hypothesis, not confirmed).** `CUBLAS_WORKSPACE_CONFIG=:4096:8` asks cuBLAS for eight 4 MiB workspaces, about 32 MiB. If PyTorch counts these in allocated memory, every run would sit near 32 MiB regardless of what was freed, and the 8 MB tolerance in my check would be wrong, not the cleanup. The alternative is that the on-GPU datasets or other training state were not actually freed, which would be a real bug.
+- **How to tell them apart.** The per-run `resident_mb` values: a constant near 32-33 MiB across all arms points to the workspace. A value near 13-14 MiB plus the parameters, or one that differs by arm, points to leftover data or state.
+- **Not changing the check or the code until the numbers are seen.** Loosening the threshold to make it pass would defeat its purpose.
 
-**Not yet verified (no output received):** V4 determinism reruns (same-seed bitwise equality under P1, and P2 for information), V5 shared-initialization identity across arms on GPU, V6 embedding scale, V7 demand floor, V16 inference-memory cleanliness, and the unit tests on the GPU machine. Also not received: the decision file, the timing file, the session manifest, and `data/*.sha256` for the 16-series dataset.
+### 21.4 Open items before calibration
+1. Receive the zip (or the V4 and V16 check details) and resolve V16.
+2. Fix the P2 definition (set the cuBLAS workspace variable only under P1) and re-measure policy timing, since the fix changes what P2 means. P1 timings are unaffected in principle, but they should come from the same session as P2.
+3. Rotate arm order in the policy-timing benchmark so arm position is not tied to arm C.
+4. Commit `results/determinism_decision.json` (from the re-run) and set `determinism.policy` in `configs/base.yaml`, after review.
