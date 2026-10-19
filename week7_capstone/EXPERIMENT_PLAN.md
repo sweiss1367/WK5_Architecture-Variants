@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v2 for review. Revised after review of D6 (determinism), D7 (latency), D9 (comparison rule) and D10 (interrupted sessions). No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v3, proposed as the execution plan. **The factor is selected: positional encoding**, conditional on one fact only you can supply (Q1, Section 14). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -349,6 +349,29 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 | Annex IV documentation | Section 11, V13 |
 | Video | Outline maps to: the question, the controls (why these dials are welded), the result with spread, the package, and what the study cannot conclude, given equal time. Planned after results. |
 
+### 12.1 Which parts of this plan are graded requirements
+
+| Plan element | Tier | Basis |
+|---|---|---|
+| One factor, 3 settings, 3 seeds each, single Colab session | [M] | Assignment text |
+| One changed factor, controls defended | [M] | Rubric (Design) |
+| Self-built, scripted dataset | [M] | Assignment text |
+| Means with seed-level spread; plain statement on noise | [M] | Assignment text, rubric (Seed honesty) |
+| Latency and peak memory logged with validation error | [M] | Assignment text |
+| Pinned deps, seeded config-driven entry point, configs, tables and plots, README, run order captured | [M] | Assignment text, rubric (Reproducibility) |
+| 3-5 page Annex IV-style document, six topics, NIST and ISO cross-references | [M] | Assignment text |
+| Video requirements | [M] | Assignment text |
+| Pre-registration, smoke test, per-run saving | [A] | Approved by you |
+| Determinism policy, matched-difference rule, no early stopping, fixed steps | [A] | Approved by you |
+| Training duration vs inference latency as separate measures; memory reset per run | [A] | Approved by you |
+| Resumed-session disclosure; Annex IV verified against official text | [A] | Approved by you |
+| Seed-level scatter plot | [R] | The assignment requires "plots" only |
+| Fresh-runtime README test | [R] | Course guidance |
+| Explicit driver script for run order | [R] | The rubric requires run order to be captured. A documented command sequence also satisfies it |
+| Pilot, optional seeds 3-4, leave-one-out check, session manifest, seasonal-naive baselines, crosswalk table, numbered limitations | [R] | Course guidance or my suggestion |
+
+None of the [R] items is a grading requirement. If time or compute gets tight, they are dropped first.
+
 ## 13. Known limitations to carry into the documentation
 
 1. Synthetic data reflects my assumptions about seasonality, not real co-op behavior.
@@ -362,33 +385,40 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 9. Latency is measured under the deterministic policy, and may not match a production-tuned deployment.
 10. If the main grid was resumed, the number of sessions and the segment of each run are stated (6.6).
 
-## 14. Open questions for you
+## 14. Remaining question and defaults adopted
 
-- **Q1.** Was positional encoding discussed or used in earlier weeks, beyond the Week 5 classifier's learned embedding? If not, I recommend LoRA rank as the substitute.
-- **Q2.** Is synthetic data acceptable for your video story, or do you prefer an open dataset (more acquisition risk, more realism)?
-- **Q3.** Do you want the optional extension to seeds 3 and 4 declared in the pre-registration?
-- **Q4.** Is a "no positional encoding" control worth adding as an optional fourth arm? I'd leave it out to stay at exactly three.
-- **Q5.** Two budget points: (a) Do you agree to treat the main grid plus measurements as "the single session," with smoke and pilot as separately disclosed development sessions? (b) Is the three-hour planning ceiling acceptable, given I wouldn't plan on an overnight session?
-- **Q6.** How would you like δ framed: a fixed number of MAPE points, or relative to the seasonal-naive gap? I'd settle that in PREREGISTRATION.md after the pilot.
+**One question genuinely needs you.**
+- **Q1.** Was positional encoding covered or used in earlier weeks, beyond the Week 5 classifier's learned embedding? The assignment requires the factor to be "carried forward from earlier weeks." If it wasn't, I switch to LoRA rank and re-derive the controls, since LoRA's alpha scaling needs its own treatment.
+
+**Defaults adopted** for questions I raised earlier. Tell me to change any of them.
+
+| Was | Default adopted | Why |
+|---|---|---|
+| Q2 dataset | Synthetic seeded generator | Simplest to script and explain, permitted by the assignment, no license risk. Cost: results describe my assumed seasonality (limitation 1) |
+| Q3 extension | Declare seeds 3-4 as an optional extension in the pre-registration, triggered only by a "direction only" or "no difference" Stage-1 verdict, and report both stages | Cheap, and declaring it up front prevents post-hoc seed adding. Three seeds still meet the assignment minimum |
+| Q4 no-PE control | Excluded | You asked for exactly three settings |
+| Q5(a) session | Main grid plus measurements = the single session. Smoke and pilot are disclosed development sessions | Matches the assignment wording most plausibly |
+| Q5(b) ceiling | Three-hour planning ceiling, no overnight assumption | Free-tier sessions can end unpredictably |
+| Q6 δ | Fixed number of MAPE points, argued in the pre-registration after the pilot | Simplest to state and defend |
 
 ## 15. Decision register, D1-D9 (from REQUIREMENTS.md Section 4)
 
 | # | Decision | Status | Resolution or what blocks it |
 |---|---|---|---|
-| D1 | Factor | Proposed | Positional encoding. Blocked on Q1. |
-| D2 | Dataset | Proposed | Synthetic seeded generator. Blocked on Q2. |
+| D1 | Factor | **Selected** | Positional encoding. The only open item is Q1. |
+| D2 | Dataset | **Decided** | Synthetic seeded generator (default adopted). |
 | D3 | Model, task, metric | Proposed | Small Transformer, 24 h ahead from 7 days, validation MAPE (MAE secondary). Numerical details confirmed by smoke and pilot. |
-| D4 | Three settings | Proposed | Learned absolute, sinusoidal, RoPE. |
-| D5 | Seeds and run budget | Partly decided | Seeds 0-2 decided. Extension on Q3. Step count and budget feasibility need the pilot. |
+| D4 | Three settings | **Decided** | Learned absolute, sinusoidal, RoPE. |
+| D5 | Seeds and run budget | Partly decided | Seeds 0-2 decided. Optional extension declared (default). Step count and budget feasibility need the pilot. |
 | D6 | Determinism policy | **Decided (rule)** | P1 preferred, P2 fallback, chosen once in the smoke stage by the 6.4 rule. |
 | D7 | Latency and memory | **Decided** | Training duration and batch-1 inference latency recorded separately, plus peak memory for each phase (Section 7). Stability of latency check in the pilot (V15). |
 | D8 | Step budget, early stopping | Partly decided | No early stopping, fixed steps. Value set in the pilot, then frozen. |
 | D9 | Comparison rule | **Decided (form)** | Matched differences with the Section 8 rule. δ and k frozen after the pilot, before main runs. |
-| D10 | Interrupted sessions | **Decided** | Section 6.6. Blocked only on Q5(a) for what counts as "the session." |
+| D10 | Interrupted sessions | **Decided** | Section 6.6. "Session" = main grid plus measurements (default adopted). |
 | D11 | Annex IV source | Decided | Official regulation text first (Section 11, V13). |
 | D12 | Repo layout | Decided | `week7_capstone/` (6.1). |
 
-**What stands between now and building the repository.** Four things: your answers to Q1, Q2 and Q5, and agreement that the numeric values for steps, δ, and k come from a pilot. The pilot needs working code, so I'd build the minimal `make_data.py`, `model.py` and `run_ablation.py` first, as the same files that later become the package, and not a separate throwaway. If you'd prefer to freeze more before any code exists, the numeric items are the only ones that can't be frozen without measuring.
+**What stands between now and building the repository.** Two things: your answer to Q1, and agreement that the numeric values for steps, δ, and k come from a pilot. The pilot needs working code, so I'd build the minimal `make_data.py`, `model.py` and `run_ablation.py` first, as the same files that later become the package, and not a separate throwaway. If you'd prefer to freeze more before any code exists, the numeric items are the only ones that can't be frozen without measuring.
 
 ## 16. Changes from v1
 
@@ -398,3 +428,10 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 - **Interrupted sessions (D10):** added attempt counters, interruption markers, a session manifest, a definition of uninterrupted vs resumed, and the consequences for timing comparisons and the "single session" claim.
 - **Diffusion:** stated explicitly that it is not used and why.
 - **Budget:** noted the overnight assumption and set a three-hour planning ceiling pending Q5.
+
+## 17. Changes from v2
+
+- Factor moved from "recommended" to **selected** (positional encoding), conditional on Q1 only.
+- Defaults adopted for Q2-Q6 so only Q1 remains open.
+- Added Section 12.1, tagging every plan element [M], [A] or [R] so optional techniques aren't mistaken for graded requirements.
+- `REQUIREMENTS.md` checklist split into mandatory, adopted and recommended tiers.

@@ -1,7 +1,7 @@
 # REQUIREMENTS.md: CST 627 Week 7 Capstone
 
 **Title:** Seed-Varied Ablation Study and an EU AI Act Annex IV Reproducibility Package
-**Status:** DRAFT v2. Awaiting user review. No implementation has started.
+**Status:** DRAFT v3. Checklist now separates mandatory deliverables from adopted commitments and recommended enhancements. No implementation has started.
 **Points:** 150 (Project, CLO4 / CLO5 / CLO6)
 
 ## 0. Sources and tags
@@ -110,15 +110,21 @@ Each needs your approval before implementation. These are choices, not requireme
 | D11 | **Annex IV content source.** The Regulation excerpt supplied in the readings does not reproduce Annex IV. I'd read Annex IV itself from EUR-Lex and cite the exact structure. Do not rely on the aiacto.eu or arXiv 2508.08804 excerpt for legal claims (the readings page itself rates them low rigor / commercial). | Rubric penalizes misstating Annex IV. |
 | D12 | **Repo layout.** Existing repo is Week 5 content. New Week 7 work should live in its own subfolder on this branch so Week 5 artifacts aren't disturbed. | Housekeeping. |
 
-## 5. Optional improvements (not required)
+## 5. Three tiers: what is graded, what we committed to, what is optional
 
-Course guidance that could raise quality but is not in the assignment text:
-- A timestamped pre-registration file (question, direction, primary metric, "meaningful" threshold) committed before any full run [COURSE]. Cheap, and it directly supports defensibility, so I recommend it.
-- A `--smoke` mode under about 2 minutes [COURSE].
-- A pilot of several seeds on a single arm to estimate noise before committing to the full grid [COURSE].
-- A rank-stability resampling analysis [COURSE, interactive page].
-- A numbered limitations section where each item names its control [COURSE]. Directly useful for the Annex IV "limitations" and "known risks" topics.
-- Reading Articles 9, 11, 15 and Annex IV of the Regulation beyond the supplied excerpt (see D11).
+Nothing is treated as a grading requirement unless it traces to the assignment text or the rubric.
+
+| Tier | Meaning | Consequence of skipping |
+|---|---|---|
+| **[M] Mandatory** | Stated in the assignment text or rubric | Costs rubric points or breaks the assignment |
+| **[A] Adopted** | A design commitment you approved for scientific validity. Binding on this project, but **not** an assignment requirement | No rubric penalty by itself. Skipping it weakens the study, so drop it only on purpose |
+| **[R] Recommended** | Course guidance or my suggestion. One sensible way to meet a mandatory item, not the only way | None. Replace or drop freely |
+
+**Adopted [A] (approved by you):** pre-registration file, smoke test, per-run independent saving, one documented determinism policy, matched-seed comparison with an interpretation rule fixed before results, no early stopping, fixed step budget, separate training-duration and inference-latency measurement, peak memory reset before each run, disclosure of resumed sessions.
+
+**Recommended [R]:** seed-level scatter plot (the assignment requires "plots", not this plot), fresh-runtime README test, explicit run-order driver script (the rubric requires run order to be *captured*, which a documented command sequence also satisfies), pilot run, optional extension seeds, leave-one-out check, session manifest, rotating arm order, reference baselines (seasonal-naive), test-set evaluation, crosswalk table format, numbered limitations section, `--smoke` flag name.
+
+**Reading and legal-source extras [R]:** reading the Regulation beyond Article 11 and Annex IV. (Verifying Annex IV against the official text is [A], because the Annex IV rubric criterion penalizes misstating it.)
 
 ## 6. Reading and citation notes (from the readings page)
 
@@ -128,39 +134,66 @@ Course guidance that could raise quality but is not in the assignment text:
 
 ## 7. Final submission checklist
 
+### 7A. Mandatory deliverables [M]
+
 **Experiment**
-- [ ] One factor chosen from the five allowed (A1) and justified as carried forward from earlier weeks
-- [ ] ≥3 settings × ≥3 seeds completed, or every shortfall reported (A2, A3, A10)
-- [ ] Config diff shows exactly one field changed between arms (A9)
-- [ ] Each control decision has a written defense (Design rubric)
-- [ ] Validation error, wall-clock latency and peak GPU memory logged for every run (A8)
-- [ ] Mean + seed-level spread + scatter plot reported (A6)
-- [ ] Explicit statement of whether the effect exceeds run-to-run noise, including if it does not (A7)
-- [ ] Every run reported, including failed and inconclusive ones (A10)
-- [ ] Entire study completed in one free-tier Colab GPU session (A4)
+- [ ] One factor chosen from the five allowed (A1)
+- [ ] ≥3 settings, ≥3 random seeds per setting (A2, A3)
+- [ ] Exactly one factor changes between arms, all else held fixed, and each control decision defended (A9, Design rubric)
+- [ ] All runs inside a single free-tier Colab GPU session, or any deviation disclosed accurately (A4)
+- [ ] Dataset built by me, with scripted generation or acquisition that reruns cleanly (A5)
+- [ ] Means reported with seed-level spread (A6)
+- [ ] Plainly stated whether observed differences exceed run-to-run noise, including when spread swamps the effect (A7, Seed rubric)
+- [ ] Wall-clock latency and peak memory logged alongside validation error (A8)
+- [ ] Every run reported, including unsuccessful and inconclusive ones (A10)
 
 **Repo**
-- [ ] Dataset generation/acquisition script reruns cleanly (A5)
 - [ ] Pinned dependencies (R1)
-- [ ] Seeded config-driven entry point and run-order driver (R2, R6)
-- [ ] Config files (R3)
-- [ ] Results tables and plots, plus plot script (R4)
-- [ ] README quickstart verified in a fresh Colab runtime (R5)
+- [ ] Seeded, config-driven entry point (R2) and config files (R3)
+- [ ] Results tables and plots (R4)
+- [ ] README a stranger can follow without contacting me (R5)
+- [ ] Environment, seeds, data generation and run order captured so the study can be rerun end to end (R6)
 
-**Documentation (3-5 pages)**
-- [ ] Purpose, data provenance, training methodology, evaluation metrics, limitations, known risks (D2)
-- [ ] NIST AI RMF and ISO/IEC 42001 cross-references (D3)
-- [ ] Annex IV described accurately from the primary text (D4)
-- [ ] Page count 3-5 (D1)
+**Annex IV-style documentation**
+- [ ] 3-5 pages (D1)
+- [ ] System purpose, data provenance, training methodology, evaluation metrics, limitations, known risks (D2)
+- [ ] NIST AI RMF and ISO/IEC 42001 cross-references where controls map (D3)
+- [ ] Annex IV described accurately (D4)
 
 **Video**
-- [ ] 8-10 minutes, ≤10 (V2)
-- [ ] Face visible the whole time (V3)
-- [ ] Own words, outline only, no verbatim script (V4)
+- [ ] 8-10 minutes, never over 10 (V2)
+- [ ] Face visible the entire time (V3)
+- [ ] Own words, notes/outline only, no verbatim reading (V4)
 - [ ] Clear audio (V5)
-- [ ] MP4/MOV/WebM (V6)
-- [ ] Covers the study, the package, and what the study cannot conclude; finding and limits given equal weight (V1, V8)
-- [ ] Uploaded to the LMS dropbox (V7)
+- [ ] MP4 preferred, MOV or WebM accepted (V6)
+- [ ] Covers the study, the package, and what the study cannot conclude, with the finding and its limits given equal clarity (V1, V8)
+- [ ] Uploaded to the LMS assignment dropbox (V7)
+
+### 7B. Adopted commitments [A]
+
+- [ ] Pre-registration file committed before any main run
+- [ ] Smoke test passed before the pilot
+- [ ] Each run saved independently, with a completed/interrupted/failed status
+- [ ] One determinism policy chosen before benchmarking, applied to every arm, limits documented
+- [ ] Matched per-seed differences with mean, SD and every individual value; interpretation rule fixed before results
+- [ ] No early stopping, fixed step count, final-step evaluation
+- [ ] Training duration and inference latency reported as separate quantities, measured with CUDA synchronization, inference after warm-up
+- [ ] Peak GPU memory counters reset before each run, measured the same way in every run
+- [ ] Resumed vs uninterrupted execution disclosed
+- [ ] Annex IV content verified against the official regulation text
+
+### 7C. Recommended enhancements [R] (drop any without penalty)
+
+- [ ] Seed-level scatter plot
+- [ ] README quickstart tested in a fresh Colab runtime
+- [ ] Explicit driver script for run order
+- [ ] Pilot on separate seeds
+- [ ] Optional extension to seeds 3 and 4
+- [ ] Leave-one-seed-out check
+- [ ] Session manifest with GPU UUID and versions
+- [ ] Seasonal-naive reference baselines
+- [ ] Framework crosswalk table
+- [ ] Numbered limitations section
 
 ## 8. Highest-risk rubric requirements
 
