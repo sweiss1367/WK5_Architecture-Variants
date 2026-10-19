@@ -10,13 +10,22 @@ The hypothesis in Section 2 and the practical-significance argument for δ are t
 
 For a small Transformer that forecasts the next 24 hours of electricity demand from the previous 168 hours, does the choice of positional encoding (learned absolute, fixed sinusoidal, rotary) change validation MAPE by more than the run-to-run variation from random seeds, with all other settings held fixed?
 
-## 2. Hypotheses (directional, drafted for your review)
+## 2. Hypotheses
 
-Context: input is demand only (no calendar features), windows always start at 00:00, and the head is a mean-pool, so the only absolute time-of-day information available to the model is whatever the encoding supplies, plus whatever it infers from the shape of the demand curve itself.
+**Primary hypothesis (neutral, no direction).** Positional-encoding choice (learned absolute, fixed sinusoidal, rotary) affects forecasting accuracy on the synthetic electricity-demand traces. The experiment asks whether the observed between-arm differences in validation MAPE exceed run-to-run variation across seeds. No arm is predicted to win, and the study is reported the same way whether the answer is yes, no or inconclusive.
 
-- **H1 (directional).** RoPE has **higher** validation MAPE than learned absolute encoding: `d_C > 0`, where `d_C` is defined in Section 4. Reason: RoPE is purely relative, so it cannot tell the model "this token is 17:00," while learned absolute encoding can.
-- **H2 (exploratory, no direction).** Sinusoidal vs learned absolute: no directional prediction. Both supply absolute position.
-- Either hypothesis may be wrong, and a null or reversed result will be reported as such.
+**Secondary hypothesis (directional, conjectural).** RoPE has **higher** validation MAPE than learned absolute encoding: `d_C > 0` (Section 4).
+
+*Reasoning, and why it is only a conjecture.* The model receives demand values only, with no calendar features, windows always start at 00:00, and the head is a mean-pool. Learned and sinusoidal encodings therefore give the model an explicit absolute-position signal, which in these windows corresponds to hour of day. RoPE gives relative offsets only. That is the reason to expect a disadvantage. It is not established, because:
+- the demand curve itself carries phase information (the shape of the daily peaks, the weekday/weekend level shift), so a model can infer where it is in the day from content without any absolute encoding;
+- relative offsets between tokens still let attention compare "now" to "24 hours ago" and "168 hours ago," which is most of what a seasonal forecast needs;
+- the model is small and the training budget short, so differences may be too small to see.
+
+The direction is therefore not treated as expected or likely. It is retained as a secondary hypothesis because the input design (no calendar features) makes it a reasonable thing to test. A null result, or `d_C < 0`, is reported plainly, and the secondary hypothesis never changes the primary verdict logic in Section 5.
+
+**Exploratory.** Sinusoidal vs learned absolute (`d_B`): no direction predicted.
+
+**Family of comparisons.** There are two planned comparisons (B vs A, C vs A) and one descriptive one (C vs B). No multiplicity correction is applied, and no verdict is described as confirmed.
 
 ## 3. Primary metric and arms
 
@@ -40,7 +49,7 @@ For comparison arm X and seed `s`: `d_s = MAPE(X, s) − MAPE(A, s)`. Negative m
 
 No verdict is called "confirmed." No p-values are reported. Whatever the verdict, the report states the smallest mean difference that would have satisfied (c), `k × SD_d`.
 
-For H1 the sign of `d_C` must be positive for a "supported" verdict in the hypothesized direction. A significant-looking negative `d_C` is reported as the opposite direction and does not support H1.
+A "supported, tentative" verdict is a statement about a difference in either direction. For the secondary hypothesis, `d_C` must be positive for the verdict to count in the conjectured direction. A negative `d_C` meeting the conditions is reported as the opposite direction and does not support the secondary hypothesis.
 
 ## 6. Meaning of δ and k, and how they are selected
 
@@ -50,11 +59,11 @@ For H1 the sign of `d_C` must be positive for a "supported" verdict in the hypot
 
 **Selection procedure.**
 1. δ is chosen after the pilot and before the first main run.
-2. δ is derived from **scale information only**: the pilot's reference-arm (A) validation MAPE level and the seasonal-naive baseline's MAPE. It is **not** derived from the pilot's between-arm differences, from which arm looked better, or from `SD_d`.
+2. δ is derived from **scale information only**: the pilot's reference-arm (A) validation MAPE level and the seasonal-naive baseline's MAPE. It is **not** derived from any between-arm validation difference, from which arm looked better, or from `SD_d`. The pilot runs validation for arms B and C only as a by-product of the run script. Those values are **not inspected** before the freeze. The pilot analysis prints reference-arm validation results and, for all arms, training loss and timing only.
 3. The value is a round number of MAPE points (multiple of 0.05), with a written argument below naming the release decision it corresponds to.
 4. δ is not changed after the freeze.
 
-**Feasibility check (does not change δ).** After δ is set, compare it to the pilot's `SD_d`. If `k × SD_d` from the pilot is far above δ, this design probably cannot separate differences of size δ. The consequence is that the final report is written as a noise-floor characterization, as stated in the plan. δ is not lowered to make the study look more decisive.
+**Feasibility check (does not change δ).** The noise estimate comes from the reference arm alone: `SD_A`, the seed-to-seed SD of arm A's validation MAPE over pilot seeds 900, 901, 902. A paired difference between two arms with independent seed noise of that size would have SD about `√2 × SD_A`. Matching seeds can only reduce this, so the estimate is conservative. After δ is set, compare `k × √2 × SD_A` with δ. If it is far above δ, this design probably cannot separate differences of size δ, and the final report is written as a noise-floor characterization. δ is not lowered to make the study look more decisive, and this check changes no setting.
 
 **δ value:** `[PILOT] ______` MAPE points.
 **Argument for δ:** `[PILOT] ______`
@@ -71,14 +80,21 @@ For H1 the sign of `d_C` must be positive for a "supported" verdict in the hypot
 
 **k value:** `2` (provisional until the freeze).
 
-## 7. Step budget (selected from training loss only)
+## 7. Step budget (selected from training loss only, staged)
 
-The step count `S` is chosen so that all three arms have trained to a plateau. It is **not** chosen from validation error.
+The step count `S` is chosen so that training has reached a plateau. It is **not** chosen from validation error, and no between-arm validation difference is used. The calibration is staged so that it grows only if the earlier stage does not support a defensible budget.
 
-**Calibration (pilot part B).** Seed 900 only, three arms, `S ∈ {1000, 2000, 4000}` (grid provisional, may be edited before the pilot starts). Each is a separate full run, because the learning-rate schedule depends on `S`.
-**Rule.** Choose the smallest `S` such that, for every arm, going from this `S` to the next larger value improves the final training loss (mean over the last 100 steps, training windows only) by less than 2%. The 2% threshold is provisional and may be edited before the pilot starts, but not after.
-**If no grid value meets the rule,** use the largest `S` affordable within the budget and record the non-convergence as a limitation.
-**Note on validation reuse.** The pilot and main runs score on the same validation windows. No model, hyperparameter or step-count decision uses validation error. The pilot's validation numbers are used only for the sanity checks (beats the seasonal-naive baselines) and the `SD_d` feasibility check. This is stated as a limitation.
+**Stage 1: timing and training-loss calibration (3 runs).** Reference arm A, seed 900, `S ∈ {1000, 2000, 4000}`. Each is a separate run, because the learning-rate schedule depends on `S`. These runs also give per-step timing for the budget projection.
+- **Rule.** Choose the smallest `S` such that going to the next larger grid value improves the final training loss (mean over the last 100 steps, training windows only) by less than 2%. The grid and the 2% threshold are provisional and may be edited before Stage 1 starts, not after.
+- **Expansion trigger.** If no grid value meets the rule (loss still improving by 2% or more from 2000 to 4000), add `S = 8000` for arm A only if the timing projection (Section 8) allows it. Otherwise use 4000 and record non-convergence as a limitation.
+
+**Stage 2: confirmation on the other arms (4 runs, expansion).** Arms B and C, seed 900, at the Stage-1 value `S*` and at the next larger grid value, applying the same 2% rule per arm. I include this because a plateau on arm A alone does not show the budget is adequate for B and C, and a step budget tuned on one arm would favor it. If either arm fails the rule, `S*` moves up one grid value for **all** arms and the check is repeated. This can be dropped without affecting any other part of the protocol, at the cost of a weaker step-budget claim, which would then be stated as a limitation.
+
+**Noise pilot (2 additional runs).** Arm A only, seeds 901 and 902 at `S*`. Seed 900 at `S*` is reused from Stage 1, because the configuration is identical. The three runs give `SD_A`. The pilot **estimates variability**. It is not used to choose the best encoding, and no between-arm validation difference enters any decision.
+
+**Total pilot and calibration:** 3 + 4 + 2 = 9 short runs, fewer if Stage 2 is dropped.
+
+**Note on validation reuse.** Pilot and main runs score on the same validation windows. No model, hyperparameter or step-count decision uses validation error. Pilot validation numbers are used only for the reference arm's sanity checks and for `SD_A`. This is stated as a limitation.
 
 **S value:** `[PILOT] ______`
 
@@ -86,7 +102,7 @@ The step count `S` is chosen so that all three arms have trained to a plateau. I
 
 - **P1:** full deterministic (seeds, `CUBLAS_WORKSPACE_CONFIG=:4096:8`, `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`, `cudnn.benchmark=False`, attention backend forced to a deterministic one if needed). **P2:** seeded only, default kernels.
 - **Selection is based on projected GPU time only.** The policy-timing script times the same tiny training configuration under P1 and P2, and it does **not compute or record any validation or test accuracy**. Accuracy plays no part in the decision.
-- **Rule.** Project total GPU time (smoke + both pilot parts + 9 main runs + the declared extension of 6 runs + one retry allowance of 3 runs) using measured P1 timings. If the projection fits within the planning ceiling (3 hours), adopt P1. Otherwise adopt P2.
+- **Rule.** Project total GPU time (smoke + 9 pilot and calibration runs + 9 main runs + the declared extension of 6 runs + one retry allowance of 3 runs, each at the largest grid step count, 4000) using measured P1 timings. If the projection fits within the planning ceiling (3 hours), adopt P1. Otherwise adopt P2.
 - **Recording.** The decision, timings, projection, timestamp and GPU identity are written to `results/determinism_decision.json` and copied below. The same policy is then used for all arms, seeds and stages, and is never changed.
 - Limits of GPU reproducibility are documented in the package (see `EXPERIMENT_PLAN.md` Section 6.4).
 

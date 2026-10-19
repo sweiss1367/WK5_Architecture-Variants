@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v4. Build step 1 (scaffold, configs, draft PREREGISTRATION.md) is done. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v5. Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -182,8 +182,8 @@ week7_capstone/
   configs/base.yaml         # everything fixed, including the determinism policy
   configs/arm_{A,B,C}.yaml  # each overrides exactly one field: pos_encoding
   src/make_data.py  src/model.py  src/run_ablation.py  src/analyze.py
-  run_all.py                # driver: loops arms x seeds, one subprocess per run
-  results/runs/*.json       # one file per run attempt
+  run_all.py                # [R] optional driver: loops arms x seeds, one subprocess per run (not written yet)
+  results/runs/<stage>/*.json  # one file per run attempt; stages: smoke, calibration, pilot, main, extension
   results/session_manifest.json
   results/*.csv  figures/
   docs/ANNEX_IV.md
@@ -213,8 +213,8 @@ The smoke test verifies that the backbone's initial weights are bitwise identica
 
 | Policy | Settings |
 |---|---|
-| **P1: full deterministic (preferred)** | Python/NumPy/Torch/CUDA seeded. `CUBLAS_WORKSPACE_CONFIG=:4096:8`, `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`, `cudnn.benchmark=False`, FP32, no DataLoader workers (or seeded workers). If fused attention backward is nondeterministic, force the math attention backend for all arms. |
-| **P2: seeded, not deterministic (fallback)** | Same seeding, default kernels. Remaining nondeterminism is treated as part of the noise floor and documented. |
+| **P1: full deterministic (preferred)** | Python/NumPy/Torch/CUDA seeded. `CUBLAS_WORKSPACE_CONFIG=:4096:8`, `torch.use_deterministic_algorithms(True)`, `cudnn.deterministic=True`, `cudnn.benchmark=False`, FP32, no DataLoader workers. Attention is forced to the PyTorch math backend for every arm, unconditionally (a 168-token sequence makes this cheap, and it avoids a conditional rule). |
+| **P2: seeded, not deterministic (fallback)** | Same seeding, default kernels and default attention backend selection. Remaining nondeterminism is treated as part of the noise floor and documented. |
 
 **Selection rule (written now, applied in the smoke stage).** The smoke stage times the same tiny training configuration under P1 and under P2. These two timing runs are the only place both policies appear, and they are not part of any results table. They are reported only as the "determinism penalty" measurement.
 - Project total GPU time (smoke + pilot + main + optional extension + one full re-run allowance) from the P1 timings.
@@ -239,7 +239,7 @@ The smoke test verifies that the backbone's initial weights are bitwise identica
 ### 6.6 Interrupted sessions: completed vs resumed experiments (D10)
 
 **Per-run records.**
-- Each run attempt writes `results/runs/{arm}_seed{s}_attempt{n}.json`, atomically (write temp file, then rename).
+- Each run attempt writes `results/runs/<stage>/{arm}_seed{s}_attempt{n}.json`, atomically (write temp file, then rename).
 - A `.running` marker is created when the attempt starts and removed on completion. A marker with no result file means the attempt was interrupted. Interrupted attempts are never deleted. They are listed in the results table with status `interrupted`.
 - `status` is one of `completed`, `failed`, `interrupted`. A rerun after an interruption is a new attempt number, started from scratch. There is no mid-run checkpoint resume, because runs are short and a resumed run would have a different RNG and timing history from a clean one.
 - The primary tables use the completed attempt for each (arm, seed). If one has more than one completed attempt, the plan stops and asks, since that should not happen.
@@ -268,7 +268,7 @@ Two cost quantities are recorded separately and never described by the same word
 |---|---|
 | **Validation error (primary)** | MAPE (%) over all validation windows and the 24 horizons, in demand units, using final-step weights |
 | Secondary errors | Validation MAE (kW). Test MAPE evaluated once at the end of each run, not used for any decision. |
-| **Training duration** | Seconds from first to last training step, with `torch.cuda.synchronize()` at both ends. In-loop evaluation time is accumulated separately and excluded. Host-to-GPU data transfer is inside the loop and included. Data generation and model construction are excluded. All stated in the report. |
+| **Training duration** | Seconds from first to last training step, with `torch.cuda.synchronize()` at both ends. There is no in-loop evaluation, so nothing is subtracted. The datasets are uploaded to the GPU once before the timed region (excluded), and the per-step batch-index transfer is included. Data generation and model construction are excluded. All stated in the report. Peak training memory therefore includes the resident dataset tensors, which are identical for all arms. |
 | **Inference latency** | Batch size 1, one 168-hour window per call, FP32, `torch.inference_mode()`, same determinism policy. Fixed set of 100 validation windows chosen with a fixed index seed. Warm-up 20 calls, then 200 timed calls cycling through the windows, each bracketed by `cuda.synchronize()`. Reported as p50, p95 and mean in milliseconds. Starting values, to be checked for stability in the pilot (V15). |
 | **Peak GPU memory (training)** | `torch.cuda.max_memory_allocated()` after `reset_peak_memory_stats()` at the start of the run, read when training ends |
 | **Peak GPU memory (inference)** | Optimizer state and gradients are deleted, cache is cleared, resident allocated memory is recorded, then `reset_peak_memory_stats()` and the latency benchmark, then the peak is read. This keeps training state out of the inference figure. |
@@ -308,7 +308,7 @@ No verdict is called "confirmed." No p-values are reported, because three matche
 - `SD_d` is itself estimated from three numbers and is unstable. Conditions (c) and (d) are guards, not a substitute for more seeds.
 - **Detectable-difference statement.** Whatever the verdict, the report states the smallest mean difference that would have satisfied (c) given the observed `SD_d`, that is, 2 × SD_d. A null result is then written as "this design could not distinguish differences smaller than about X MAPE points," which is the form the lesson calls a finding.
 
-**Setting δ.** δ is a practical threshold, meaning the smallest MAPE change that would matter for a forecasting release decision. It is argued in writing in PREREGISTRATION.md, informed by the pilot's observed `SD_d`, and frozen before the first main run. If the pilot shows that 2 × SD_d is already far above any δ worth caring about, the pre-registration says so, and the study is reported as a noise-floor characterization. It is not rescued by adding arms or tuning. δ is never chosen after main-run results are seen. The value of k = 2 in condition (c) is also frozen at that point.
+**Setting δ.** δ is a practical threshold, meaning the smallest MAPE change that would matter for a forecasting release decision. It is argued in writing in PREREGISTRATION.md, derived from scale information only (the reference arm's MAPE level and the seasonal-naive MAPE), and frozen before the first main run. No between-arm validation difference from the pilot is used. The noise estimate for the feasibility check comes from the reference arm alone (`SD_A`, over pilot seeds 900-902), and the check can only change how the final report is framed, never δ or any setting. k = 2 is provisional and is changed only by a logged amendment before the freeze.
 
 **Optional extension (Q3).** If declared in the pre-registration, seeds 3 and 4 are added only when the Stage-1 verdict is "direction only" or "no difference." The same rule is applied to five matched seeds, and both stages are reported, labeled by stage.
 
@@ -321,8 +321,9 @@ All times are planning guesses until the pilot measures them.
 | Stage | Purpose | Runs | Est. time |
 |---|---|---|---|
 | Smoke | Whole pipeline on a tiny slice, assertions, determinism check, P1 vs P2 timing for the selection rule | a few tiny runs | under 10 min |
-| Pilot A: step calibration | Choose the step count `S` from **training loss only** | 3 arms × seed 900 × `S` in {1000, 2000, 4000} = 9 short runs | about 15-30 min |
-| Pilot B: noise and feasibility | Per-run time and memory, latency stability, sanity checks, `SD_d` feasibility check, δ context | 3 arms × seeds 900-902 at the chosen `S` = 9 runs | about 15-30 min |
+| Calibration stage 1 | Timing and training-loss calibration, reference arm only. The step count `S` is chosen from **training loss only**. | Arm A, seed 900, `S` in {1000, 2000, 4000} = 3 short runs | about 5-15 min |
+| Calibration stage 2 (expansion) | Confirm the plateau on the other arms, so the step budget is not tuned on one arm | Arms B and C, seed 900, at `S*` and the next grid value = 4 runs. Droppable, at the cost of a weaker step-budget claim | about 5-15 min |
+| Noise pilot | Estimate seed-to-seed variation of the **reference arm** (`SD_A`) and run the reference-arm sanity checks. It does not compare encodings. | Arm A, seeds 901, 902 at `S*` (seed 900 reused from stage 1) = 2 runs | about 3-10 min |
 | Main | The study | 3 arms × seeds 0, 1, 2 = 9, plus the latency benchmark per run | about 15-35 min |
 | Optional extension | Seeds 3 and 4, only if declared up front and the Stage-1 verdict calls for it | +6 | about 10-25 min |
 | Retry allowance | One full re-run of any interrupted seed block | up to 3 | included in the projection |
@@ -335,14 +336,14 @@ Pilot seeds are listed in the package but never mixed into main tables. The sele
 |---|---|---|---|---|
 | V1 | Is positional encoding "carried forward" from earlier weeks? | You confirm (Q1) | Yes | Switch to LoRA rank |
 | V2 | Per-run training time, steps per second, peak memory on the Colab GPU | Pilot | Main grid fits with margin for the retry allowance | Reduce steps, series count or model size for all arms |
-| V3 | Does each arm learn, and beat seasonal-naive? | Pilot | All three arms plateau and beat both baselines | Fix task or model before main runs, using pilot seeds only |
-| V4 | Do P1's flags work with the attention path? Is a same-seed rerun bitwise equal? | Smoke | Identical validation MAPE, or the residual difference is measured and reported | Force math attention backend; if still nondeterministic, report as noise-floor component |
+| V3 | Does the reference arm learn, and beat seasonal-naive? Do all arms reach a training-loss plateau? | Noise pilot and calibration stages | Arm A beats both baselines on validation. All three arms satisfy the plateau rule on training loss. Arms B and C validation values are not inspected before the freeze | Fix task or model before main runs, using pilot seeds only. Final B and C baseline comparisons are reported, not gating |
+| V4 | Do P1's flags work with the attention path? Is a same-seed rerun bitwise equal? | Smoke | Identical validation MAPE, or the residual difference is measured and reported | P1 already forces the math attention backend; if still nondeterministic, report as a noise-floor component |
 | V5 | Backbone init identical across arms for the same seed? | Smoke assertion | Bitwise equal | Fix seeding order |
 | V6 | Is the positional term wildly larger or smaller than the value embedding? | Smoke: log norms | Same order of magnitude | Document; no per-arm scaling |
 | V7 | Is MAPE numerically stable (demand floor, no near-zero targets)? | Smoke | Min demand well above zero in all splits | Raise the floor in the generator, before main runs |
 | V8 | Do windows align so position 24k is midnight? | Unit test | Passes | Fix windowing |
 | V9 | RoPE and sinusoidal correctness | Unit tests (shapes, norm preservation, RoPE relative-position property) | Pass | Fix implementation |
-| V10 | Is a plausible δ separable from `SD_d` at three seeds? | Pilot | 2 × `SD_d` is not far above any δ worth caring about | Report as a noise-floor study per Section 8. No rescue by tuning. |
+| V10 | Is a plausible δ separable from the reference-arm noise at three seeds? | Noise pilot: compare `k × √2 × SD_A` with δ | The product is not far above any δ worth caring about | Report as a noise-floor study per Section 8. No rescue by tuning, and δ is not lowered |
 | V11 | Environment pin | `pip freeze` captured on the real Colab runtime | Lockfile recorded with the Colab image date | Pin what Colab provides (torch is preinstalled, not reinstalled) |
 | V12 | Run-to-run timing noise on a shared free-tier GPU | Pilot repeats | Timing spread reported with every time claim | Report as measured, no stronger claims |
 | V13 | Can I reach EUR-Lex to read Annex IV? | Try to fetch | Official text retrieved | You paste or upload the official text. I do not write Annex IV content from memory. |
@@ -469,3 +470,11 @@ None of the [R] items is a grading requirement. If time or compute gets tight, t
 - Added Section 12.1, tagging every plan element [M], [A] or [R] so optional techniques aren't mistaken for graded requirements.
 - `REQUIREMENTS.md` checklist split into mandatory, adopted and recommended tiers.
 - Q1 resolved by the user: positional encoding is locked as the factor. No open questions remain.
+
+## 19. Changes from v4
+
+- **Hypotheses** (PREREGISTRATION.md Section 2): the primary hypothesis is now neutral (positional-encoding choice affects accuracy, test whether differences exceed seed noise). The RoPE disadvantage is a secondary, conjectural hypothesis, with the reasoning for it and the reasons it may be wrong stated explicitly.
+- **Calibration** is staged and smaller: 3 reference-arm runs, then an optional 4-run confirmation on B and C, then 2 noise-pilot runs. Total 9 or fewer, down from 18.
+- **Noise pilot** estimates reference-arm variability only (`SD_A`). Between-arm validation differences are not inspected and cannot influence δ, steps or any setting.
+- **Step 2 code** written: `make_data.py`, `model.py`, `run_ablation.py`, and 34 tests. P1 now includes the math attention backend unconditionally. There is no in-loop evaluation. Datasets are uploaded to the GPU once before timing.
+- **Shared initialization:** the shared backbone is built from the run seed, the positional module from a separate derived seed, and tests assert bitwise-identical shared weights across all three arms. Each run also records a hash of the shared initial weights.

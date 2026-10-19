@@ -1,6 +1,13 @@
 # Week 7 Capstone: Positional-Encoding Ablation for Electricity-Demand Forecasting
 
-**Status: scaffold only. Nothing here is runnable or reproducible yet.** This file is a stub and will be rewritten once the code, pilot and main runs exist. Do not treat any command below as verified.
+**Status: code written and unit-tested on CPU. No GPU run, calibration, pilot or main result exists yet, and the study is not yet reproducible end to end.** This file is a stub and will be rewritten once those exist. The commands below have been checked on CPU only.
+
+```
+python -m pytest tests -q                                   # 34 tests: data, leakage, model, CLI behaviour
+python src/make_data.py --config configs/base.yaml --verify # generate data, run the leakage check, verify the hash
+python src/run_ablation.py --config configs/arm_B.yaml --seed 0 --stage smoke --steps 60 --n-series 2 --policy P1
+```
+A real run needs a GPU, `train.steps` and `determinism.policy` set in `configs/base.yaml`, and a frozen `PREREGISTRATION.md`. Dependencies are not pinned yet (to be captured from the Colab runtime).
 
 Planning documents:
 - `REQUIREMENTS.md`: assignment requirements, rubric, and mandatory/adopted/recommended tiers
@@ -10,8 +17,8 @@ Planning documents:
 Layout:
 ```
 configs/   base.yaml (everything fixed) and arm_{A,B,C}.yaml (one field each)
-src/       make_data.py, model.py, run_ablation.py, analyze.py   (not yet written)
-tests/     unit and leakage tests                                  (not yet written)
+src/       make_data.py, model.py, run_ablation.py (written); analyze.py (not yet written)
+tests/     data, leakage, model and CLI tests                      (34, passing on CPU)
 results/   per-run JSON files, tables, session manifest            (empty)
 figures/   plots                                                   (empty)
 docs/      Annex IV-style documentation                            (not yet written)
