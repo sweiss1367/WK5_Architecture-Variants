@@ -93,6 +93,8 @@ Five criteria at 30 points each. Each has four levels. **The pasted rubric lists
 
 Each needs your approval before implementation. These are choices, not requirements.
 
+> **Status tracking:** the current status and resolution of D1-D12 is kept in `EXPERIMENT_PLAN.md` Section 15. The table below is the original list as approved.
+
 | # | Decision | Notes |
 |---|---|---|
 | D1 | **Which factor.** Assignment: "carried forward from earlier weeks", from five options. Your Week 5 repo contains architecture variants, quantization, distillation, a batch-1 benchmark harness on a T4, and scaling-law work. I don't know which of the five options you used in weeks 1-6. | **Quantization precision** is the closest match to what I can see in the repo, but I haven't verified it matches "carried forward". It also has a subtlety: post-training quantization has no training randomness, so seed variation would come from the trained model's seed, and latency/memory differences would be large and nearly deterministic. That may make the "does the effect exceed noise" question trivial for latency and meaningful only for accuracy. Alternatives (LoRA rank, positional encoding) vary seed-sensitive training outcomes more naturally. **Your call; I need to know what you built earlier.** |
