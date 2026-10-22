@@ -134,4 +134,4 @@ Every change after the freeze, and every pre-freeze change to a provisional valu
 
 | Date (UTC) | Commit | Field | Old | New | Reason |
 |---|---|---|---|---|---|
-| (none yet) | | | | | |
+| 2026-10-19 | 5d9843a6 | Section 7 expansion trigger | grid {1000, 2000, 4000} | grid {1000, 2000, 4000, 8000} for arm A | **Not an amendment.** The pre-declared trigger fired: stage 1 found no grid value with final training-loss improvement under 2% (9.22% for 1000 to 2000, 6.36% for 2000 to 4000), and the timing projection allows S=8000. Recorded for transparency. No threshold or rule was changed |

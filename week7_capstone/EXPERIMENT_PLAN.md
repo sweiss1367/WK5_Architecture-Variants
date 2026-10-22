@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -608,3 +608,34 @@ Rule: feasibility only, ceiling 3 h. P1 is selected with a large margin in both 
 - The calibration notebook has no pilot, main or extension cell, and the run script refuses those stages while their gates are unmet.
 
 **Expected cost** (estimate from session 2 timings, P1, about 36 ms/step plus about 6 s start-up): stage 1 about 5 min, stage 2 about 8 min, so 13-20 minutes.
+
+## 23. Calibration stage 1 result (session on commit `5d9843a6`, a new T4 `GPU-359219fc-...`)
+
+**Source.** `results/runs/calibration/A_seed900_S{1000,2000,4000}_attempt1.json` and `results/calibration_session1_5d9843a/`. All three runs completed. The gates passed in every run (environment equal to the lock, clean code, policy P1 matching the decision). One manifest segment. Package list hash identical to the smoke sessions.
+
+**Rule outcome (training loss only, arm A, seed 900).**
+| S | Final training loss (last 100 steps) | Improvement to next S | Qualifies (< 2%) |
+|---|---|---|---|
+| 1000 | 0.05330 | 9.22% (to 2000) | no |
+| 2000 | 0.04839 | 6.36% (to 4000) | no |
+| 4000 | 0.04531 | not yet measured | |
+
+**No grid value qualifies, so the pre-declared expansion trigger applies** (Section 7 of the pre-registration): add S=8000 for arm A only if the timing projection allows, otherwise use 4000 and record non-convergence. The driver stopped there on purpose. No threshold or rule was changed. Stage 2 (arms B and C) has not run, because it needs an S*.
+
+**Timing.** About 36 ms per step under P1, as in the smoke sessions (train time 35.7, 69.8, 143.7 s for 1000, 2000, 4000 steps; peak training memory 623 MiB).
+
+**Projection for S=8000** (pre-declared basis: remaining runs at 8000 steps, slowest arm about 15% slower than A, about 346 s per run including start-up):
+- 25 runs (A@8000, stage 2 as four 8000-step runs, noise pilot 2, main 9, optional extension 6, retry allowance 3): **2.40 h**, within the 3 h ceiling.
+- Without the optional extension: 19 runs, 1.82 h.
+- Caution: session-to-session speed differed by about 30% earlier. With that variation the 25-run figure becomes 3.12 h, over the ceiling, and the 19-run figure 2.37 h. The extension is optional and conditional, so the commitment is the 19-run plan. The main grid alone is about 47 minutes at 8000 steps.
+- **The projection allows the expansion.**
+
+**What happens next, by the rule.** The notebook is set to `--grid 1000 2000 4000 8000`. It runs arm A at 8000 steps (one run, about 5 minutes) and then:
+- If 4000 to 8000 improves by less than 2%, then S*=4000 and arms B and C are checked at 4000 and 8000 (four more runs).
+- If not, there is again no qualifying value, and the pre-registered fallback applies: use the largest value (8000) and record non-convergence as a limitation. That is a human decision, and the driver stops.
+
+**What to expect, and why it matters.** Final training loss improved by 9.2% and then 6.4% per doubling, a ratio of about 0.69. Extrapolating that ratio gives roughly 4.4% for 4000 to 8000 and about 3% beyond, so a 2% plateau is probably not reachable at an affordable budget. This is a forecast and not a result. If it holds, the final step budget is 8000 with an explicit non-convergence limitation. The 2% threshold was provisional and fixed before any run, and it will not be changed after seeing results.
+
+**Reference-arm sanity check (not used for any decision).** Arm A's validation MAPE was 5.44, 4.97 and 4.75 at 1000, 2000 and 4000 steps, against 7.08 (previous day) and 7.17 (same hour last week) for the seasonal baselines. The model learns the task and beats both baselines at every step count (V3, reference arm). Validation error was still falling at 4000 steps, which agrees with the training loss: **at any affordable fixed budget the models are somewhat under-trained**, so the study's claims are about comparisons at a fixed 8000-step (or 4000-step) budget and not about fully converged models. This belongs in the limitations.
+
+**A caveat on the rule itself.** It compares final training loss from separate runs whose learning-rate schedules decay over different lengths, so it measures the return from a longer budget, not convergence in the strict sense. This is stated in the documentation.
