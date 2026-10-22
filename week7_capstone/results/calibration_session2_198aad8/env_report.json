@@ -1,0 +1,18 @@
+{
+ "lock_path": "requirements.lock.txt",
+ "lock_present": true,
+ "matches": true,
+ "mismatches": [],
+ "python": "3.13.15",
+ "captured_this_run": false,
+ "created_utc": "2026-10-22T17:10:19.072141+00:00",
+ "full_freeze_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+ "full_freeze_file": "results/pip_freeze_b506fea2eb.txt",
+ "pinned_installed": {
+  "torch": "2.11.0+cu130",
+  "numpy": "2.1.3",
+  "PyYAML": "6.0.3"
+ },
+ "platform": "Linux-6.6.122+-x86_64-with-glibc2.39",
+ "gpu": "Tesla T4, GPU-54235a36-a56b-0554-5706-f5d5ec068e0d, 580.82.07"
+}

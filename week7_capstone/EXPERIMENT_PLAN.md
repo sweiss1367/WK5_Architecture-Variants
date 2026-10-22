@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v11. Run ledger reconciled and the 8000-step expansion authorised by the user (Section 24). The expansion run itself has not been executed. (v10 text follows.) DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v12. The 8000-step expansion has run (Section 25): no grid value qualified, so the pre-registered fallback selects S=8000 with an incomplete-convergence limitation. `train.steps` is still null pending the user's approval. (v11 text follows.) DRAFT v11. Run ledger reconciled and the 8000-step expansion authorised by the user (Section 24). The expansion run itself has not been executed. (v10 text follows.) DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -692,3 +692,50 @@ Observed: the 4000 to 8000 improvement for arm A, the per-run timing, memory, en
 
 ### 24.6 One stale message to expect
 The run on `c8ab0d2` uses the earlier `calibrate.py`. If 4000 to 8000 improves by 2% or more, its last lines may still print "expansion trigger: add S=8000...", which no longer applies because 8000 is already in the grid. Ignore it. The decision is recomputed from the run files with the updated `calibrate.py` (reporting fields only; the rule is unchanged).
+
+## 25. Calibration result: the 8000-step expansion (observed), selected step count, and what follows
+
+### 25.1 Observed (from the run files in `results/runs/calibration/`, arm A, seed 900, training loss only)
+| S | Final training loss (last 100 steps) | Improvement to next S | Below 2%? | Train time | Peak training memory |
+|---|---|---|---|---|---|
+| 1000 | 0.05330 | 9.22% | no | 35.7 s | 623.2 MiB |
+| 2000 | 0.04839 | 6.36% | no | 69.8 s | 623.2 MiB |
+| 4000 | 0.04531 | **5.12%** (to 8000) | **no** | 143.7 s | 623.3 MiB |
+| 8000 | 0.04299 | not measured | | 291.2 s | 623.3 MiB |
+
+- **The 4000 to 8000 improvement is 5.12%, above the 2% threshold.** No grid value qualifies.
+- **Selected step count: S = 8000**, by the pre-registered fallback (use the largest grid value and record non-convergence). This follows the rule as written in PREREGISTRATION.md Section 7. Stage 2 (arms B and C) is not called for, so it was not run. The 2% threshold, the grid rule and the hypotheses were not changed. No value beyond 8000 is added without approval.
+- Training cost was steady at about 36.4 ms per step (27.5 steps per second). All four runs used the same dataset (hash `65d899e6...`) and the same shared initial weights. The loss curves in the run files are complete (80 blocks of 100 steps for the 8000-step run).
+- The earlier forecast (4 to 5% for this step) was close; this is the measured value.
+
+### 25.2 Provenance, including one deviation
+- Calibration ran in **two sessions on two physical T4 GPUs** (manifest segments 0 and 1; same package list hash `b506fea2eb`, environment matched the lock in both). The 8000-step run is in segment 1 on GPU `...ec068e0d`. Calibration is therefore reported as spanning more than one session. Timing from segment 1 is not compared with timing from segment 0 except as context.
+- **Deviation from the instruction.** The 8000-step run recorded commit `198aad88`, the branch head at that time, **not** the pinned `c8ab0d20`. The most likely reason is that the notebook cloned from GitHub instead of using the uploaded zip. I compared the two commits: they differ only in `calibrate.py` (decision reporting fields), its tests, the plan and a stored notebook. **No file that executes a run changed** (`run_ablation.py`, `model.py`, `make_data.py`, `run_calibration.py`, `check_env.py`, the configs, the lock and the decision file are identical). The run is functionally what `c8ab0d20` would have produced. The three earlier runs in the returned zip are byte-identical to the committed first-session files.
+- The decision file in `results/calibration_decision.json` was recomputed from the run files with the current `calibrate.py`. The copy printed by the session is kept in `results/calibration_session2_198aad8/`.
+
+### 25.3 Limitations to carry into the documentation
+1. **Incomplete convergence.** Final training loss was still improving by 5.12% when the budget doubled from 4000 to 8000 steps. Models at 8000 steps are not converged, and comparisons between arms are conditional on a fixed 8000-step budget. An arm that learns faster is favoured at a fixed budget, which is a property of the arm but limits claims about converged accuracy.
+2. **The rule measures the return from a longer budget, not strict convergence.** Each run uses a learning-rate schedule that decays over its own length.
+3. **The step count rests on one arm, one seed.** The decision uses arm A at seed 900 only. Stage 2 was not triggered, so arms B and C have not been run at any step count in calibration. Their convergence behaviour will first be visible in the training curves of the main runs, and it will be reported there.
+4. **No uncertainty estimate for the 5.12%.** The seed-to-seed variation will first be measured in the noise pilot.
+5. **Cost measurements are under P1 only** (limitation 9 and Section 22). The default-kernel profile was declined.
+6. **Two sessions and two GPUs in calibration**, with the commit deviation above.
+7. **Context, not an input to any decision.** Arm A's validation MAPE (the reference arm, allowed to be seen) was 5.438, 4.974, 4.748 and 4.674 at 1000, 2000, 4000 and 8000 steps, against 7.081 and 7.171 for the seasonal baselines. The validation gain from 4000 to 8000 steps (1.6%) is much smaller than the training-loss gain (5.12%). That is worth noting as a possible sign that further training mostly lowers training loss. It was not used to select the step count and no threshold was re-evaluated against it.
+
+### 25.4 Remaining workload at S = 8000 (estimates, not measurements)
+Basis: measured 36.4 ms per step on arm A, about 6 s start-up, arm factors 1.00, 1.02, 1.15 for A, B, C from smoke session 2.
+| Item | Runs | Estimate | Required? |
+|---|---|---|---|
+| Noise pilot (arm A, seeds 901 and 902) | 2 | 9.9 min | Yes |
+| Main (3 arms x 3 seeds) | 9 | 47.0 min | **Yes** |
+| Retry reserve | up to 3 | 17.0 min | Reserve only |
+| Optional extension (seeds 3 and 4) | 6 | 31.3 min | **No**, not recommended before the three-seed result is reviewed |
+
+- Required work (pilot plus main): **0.95 h**. With the retry reserve: **1.23 h** (1.60 h if the session runs 30% slower).
+- With the optional extension: 1.75 h (2.28 h at +30%).
+- **All of these are within the three-hour planning ceiling.** Per-run times at S = 8000 are about 297 s (A), 302 s (B) and 340 s (C).
+
+### 25.5 Next required decisions (none taken yet)
+1. Approve setting `train.steps: 8000` in `configs/base.yaml` and committing it. Until then the pilot and main stages are blocked by design.
+2. Approve the noise pilot (arm A, seeds 901 and 902, about 10 minutes). It estimates seed-to-seed variability of the reference arm (`SD_A`), and no between-arm validation number is produced.
+3. After the pilot: write δ (from scale information only) and confirm k, then review and freeze the pre-registration. The main experiment starts only after that and after approval.

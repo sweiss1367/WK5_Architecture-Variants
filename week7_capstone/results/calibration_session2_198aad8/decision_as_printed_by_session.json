@@ -1,0 +1,57 @@
+{
+ "validation_used": false,
+ "grid": [
+  1000,
+  2000,
+  4000,
+  8000
+ ],
+ "threshold": 0.02,
+ "arm_A_relative_improvements": {
+  "1000->2000": 0.09218664338418966,
+  "2000->4000": 0.06363118853729975,
+  "4000->8000": 0.05116219564405723
+ },
+ "stage1": {
+  "status": "no_grid_value_qualifies",
+  "S_star": null,
+  "details": [
+   {
+    "S": 1000,
+    "next_S": 2000,
+    "relative_improvement": 0.09218664338418966,
+    "qualifies": false
+   },
+   {
+    "S": 2000,
+    "next_S": 4000,
+    "relative_improvement": 0.06363118853729975,
+    "qualifies": false
+   },
+   {
+    "S": 4000,
+    "next_S": 8000,
+    "relative_improvement": 0.05116219564405723,
+    "qualifies": false
+   }
+  ]
+ },
+ "status": "no_grid_value_qualifies",
+ "selected_S": 8000,
+ "selection_basis": "pre-registered fallback: no grid value qualified, so use the largest value",
+ "limitation": "Final training loss was still improving by at least 2% when the budget doubled, up to the largest budget tried (8000 steps), so the models are not converged. Comparisons are conditional on a fixed 8000-step budget.",
+ "next_action": "none: the fallback applies. No further grid values are added without approval",
+ "created_utc": "2026-10-22T17:15:24.469448+00:00",
+ "final_train_loss_100": {
+  "A@1000": 0.05330054461956024,
+  "A@2000": 0.04838694632053375,
+  "A@4000": 0.04530802741646767,
+  "A@8000": 0.04298996925354004
+ },
+ "train_seconds": {
+  "A@1000": 35.74089375199998,
+  "A@2000": 69.832798352,
+  "A@4000": 143.68002849100003,
+  "A@8000": 291.224915212
+ }
+}
