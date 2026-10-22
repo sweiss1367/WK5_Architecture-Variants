@@ -106,3 +106,50 @@ def test_decision_ignores_validation_even_through_the_full_decide_path(tmp_path)
     a, b = tmp_path / "a", tmp_path / "b"
     build(str(a), OK_ALL, val=5.0); build(str(b), OK_ALL, val=-1e9)
     assert C.decide(C.load_training_losses(str(a))) == C.decide(C.load_training_losses(str(b)))
+
+
+G8 = [1000, 2000, 4000, 8000]
+A8 = {("A", 1000): 0.05330, ("A", 2000): 0.04839, ("A", 4000): 0.04531}
+
+
+def test_outcome_improvement_below_threshold_selects_4000_after_stage_2():
+    """4000 -> 8000 improves by less than 2%: the plateau is at 4000. 8000 is NOT the selected value."""
+    h = {**A8, ("A", 8000): 0.04500}                                   # 0.68% improvement
+    assert C.stage1(h, G8)[0] == 4000
+    assert C.next_runs(h, G8) == [("B", 4000), ("B", 8000), ("C", 4000), ("C", 8000)]
+    assert C.decide(h, G8)["status"] == "missing_runs"
+    full = {**h, ("B", 4000): 0.04600, ("B", 8000): 0.04580, ("C", 4000): 0.04700, ("C", 8000): 0.04690}
+    d = C.decide(full, G8)
+    assert d["status"] == "ok" and d["selected_S"] == 4000 and "limitation" not in d
+    assert C.next_runs(full, G8) == []
+
+
+def test_outcome_improvement_at_or_above_threshold_falls_back_to_8000_with_limitation():
+    """4000 -> 8000 still improves by 2% or more: the pre-registered fallback is the largest value, plus a limitation."""
+    h = {**A8, ("A", 8000): 0.04300}                                   # 5.1% improvement
+    assert C.next_runs(h, G8) == []                                    # stage 2 is not called for, nothing more is run
+    d = C.decide(h, G8)
+    assert d["status"] == "no_grid_value_qualifies" and d["selected_S"] == 8000
+    assert "pre-registered fallback" in d["selection_basis"] and "not converged" in d["limitation"]
+    assert "without approval" in d["next_action"]                      # no 16000 or other new value is added silently
+
+
+def test_exactly_two_percent_is_not_below_the_threshold():
+    h = {**A8, ("A", 8000): 0.04531 * 0.98}                            # exactly 2.000% improvement
+    assert C.stage1(h, G8)[0] is None
+
+
+def test_stage_2_failure_at_4000_exhausts_the_grid_and_falls_back_to_8000():
+    h = {**A8, ("A", 8000): 0.04500, ("B", 4000): 0.0480, ("B", 8000): 0.0450, ("C", 4000): 0.0470, ("C", 8000): 0.0468}
+    d = C.decide(h, G8)                                                 # arm B still improves 6.3% from 4000 to 8000
+    assert d["status"] == "grid_exhausted" and d["selected_S"] == 8000 and "not converged" in d["limitation"]
+
+
+def test_original_grid_still_reports_the_expansion_trigger():
+    d = C.decide(A8)
+    assert d["status"] == "no_grid_value_qualifies" and "selected_S" not in d and "8000" in d["next_action"]
+
+
+def test_arm_a_improvements_are_always_reported():
+    d = C.decide({**A8, ("A", 8000): 0.04300}, G8)
+    assert set(d["arm_A_relative_improvements"]) == {"1000->2000", "2000->4000", "4000->8000"}

@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v11. Run ledger reconciled and the 8000-step expansion authorised by the user (Section 24). The expansion run itself has not been executed. (v10 text follows.) DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -639,3 +639,56 @@ Rule: feasibility only, ceiling 3 h. P1 is selected with a large margin in both 
 **Reference-arm sanity check (not used for any decision).** Arm A's validation MAPE was 5.44, 4.97 and 4.75 at 1000, 2000 and 4000 steps, against 7.08 (previous day) and 7.17 (same hour last week) for the seasonal baselines. The model learns the task and beats both baselines at every step count (V3, reference arm). Validation error was still falling at 4000 steps, which agrees with the training loss: **at any affordable fixed budget the models are somewhat under-trained**, so the study's claims are about comparisons at a fixed 8000-step (or 4000-step) budget and not about fully converged models. This belongs in the limitations.
 
 **A caveat on the rule itself.** It compares final training loss from separate runs whose learning-rate schedules decay over different lengths, so it measures the return from a longer budget, not convergence in the strict sense. This is stated in the documentation.
+
+## 24. Run ledger and budget reconciliation (before the 8000-step expansion)
+
+**Authorisation.** The user instructed the pre-declared expansion to proceed on commit `c8ab0d203cf580ce3910b7a8f529f30692529732`, with the 2% threshold, hypotheses and decision criteria unchanged, calibration from training loss only, no new thresholds or extra steps without approval, no main run and no pre-registration freeze without approval.
+
+### 24.1 Ledger, from the files in the repository (observed)
+| Category | Count | Status |
+|---|---|---|
+| Calibration runs completed | 3 | Arm A, seed 900, S=1000, 2000, 4000. All `completed`, attempt 1, segment 0 |
+| Interrupted or failed attempts | 0 | No `.running` markers, no failed files |
+| Noise-pilot runs | 0 | Not started |
+| Main runs | 0 of 9 required | Not started, gate closed (pre-registration unfrozen) |
+| Extension runs | 0 of 6 optional | Not started |
+| Smoke runs | 74 (43 in session 1, 31 in session 2) | Development sessions. Excluded from the study budget |
+
+**Manifest.** `results/session_manifest.json` holds 1 segment (calibration session 1, commit `5d9843a6`). The smoke manifests hold 2 segments for session 1 (the session-labelling bug, since fixed) and 1 for session 2. The 8000-step run will be a new session and a new segment of this manifest, so calibration will be reported as spanning more than one session. That is acceptable for calibration. The single-session claim applies to the main experiment.
+
+### 24.2 Remaining runs, by what the rule calls for
+| Category | Runs | Required? |
+|---|---|---|
+| Calibration: arm A at 8000 steps | 1 | Yes (the pre-declared expansion) |
+| Calibration stage 2: arms B and C at 4000 and 8000 | 4 | **Only if** 4000 to 8000 improves by less than 2% |
+| Noise pilot: arm A, seeds 901 and 902 at the selected S | 2 | Yes |
+| Main: 3 arms x 3 seeds at the selected S | 9 | Yes |
+| Retry allowance (reserve, not planned work) | up to 3 | Reserve |
+| Extension: seeds 3 and 4, 3 arms | 6 | **Optional**, only if declared and triggered |
+
+### 24.3 Projection (estimate, not measured). Per-run time: start-up about 6 s plus 36.9 ms per step (measured on arm A) times an arm factor of 1.00, 1.02, 1.15 for A, B, C (from smoke session 2)
+| | Outcome 1: 4000 to 8000 improves < 2%, so S=4000 after stage 2 | Outcome 2: improves >= 2%, so fallback S=8000, no stage 2 |
+|---|---|---|
+| A@8000 (certain) | 5.0 min | 5.0 min |
+| Stage 2 (B, C at 4000 and 8000) | 16.4 min | 0 |
+| Noise pilot (2 runs) | 5.1 min | 10.0 min |
+| Main (9 runs) | 24.3 min | 47.6 min |
+| Retry reserve (3 runs, slowest arm) | 8.8 min | 17.2 min |
+| **Required total** | **0.99 h** | **1.33 h** |
+| With a 30% slower session | 1.29 h | 1.73 h |
+| Plus optional extension | 1.26 h (1.64 h at +30%) | 1.86 h (2.42 h at +30%) |
+
+**All figures stay within the three-hour ceiling, including the optional extension and a 30% slower session (maximum 2.42 h).** The earlier figures in Section 23 (1.82 h, 2.40 h, 3.12 h) were a cruder upper bound: they priced every remaining run at the slowest arm and counted stage 2 as 8000-step runs, which cannot happen together. The arm-by-arm figures above supersede them. The main grid alone is 24 to 48 minutes. The extension is not recommended until the three-seed result and the remaining budget are reviewed.
+
+### 24.4 How the pre-registered rule maps to the outcome (one point needs your confirmation)
+Rule (PREREGISTRATION.md Section 7): S* is the **smallest S whose next grid value improves final training loss by less than 2%**.
+- **4000 to 8000 improves by less than 2%** gives S*=4000 (the loss has plateaued by 4000). Stage 2 then checks arms B and C at 4000 and 8000. If both also pass, **the selected S is 4000, and no non-convergence limitation is needed.** If B or C fails, S moves up to 8000 for all arms and the grid is exhausted, which triggers the fallback below.
+- **4000 to 8000 improves by 2% or more** means no grid value qualifies. The pre-registered fallback applies: **the selected S is the largest value, 8000, and incomplete convergence is recorded as a limitation.** Stage 2 is not called for. No further step count (for example 16000) is added without approval.
+
+**Your instruction listed these two branches the other way round** (below 2% selects 8000 with a convergence limitation; 2% or more follows the stopping procedure). I have followed the pre-registration, because you also asked for the existing rules to apply unchanged, and because selecting 8000 with a non-convergence limitation after a plateau would contradict itself. If you intended to change the rule, that would be an amendment to Section 7 and should be logged before the result is seen. Please say so.
+
+### 24.5 What will be reported when the results arrive
+Observed: the 4000 to 8000 improvement for arm A, the per-run timing, memory, environment and provenance, and (if called for) stage-2 improvements for B and C. Selected S and its basis. Estimated: the remaining runtime. Limitations: incomplete convergence (if the fallback applies), fixed-budget conditionality, P1-only latency and memory, and the learning-rate schedule caveat. Arms B and C compute no validation or test metric in calibration.
+
+### 24.6 One stale message to expect
+The run on `c8ab0d2` uses the earlier `calibrate.py`. If 4000 to 8000 improves by 2% or more, its last lines may still print "expansion trigger: add S=8000...", which no longer applies because 8000 is already in the grid. Ignore it. The decision is recomputed from the run files with the updated `calibrate.py` (reporting fields only; the rule is unchanged).

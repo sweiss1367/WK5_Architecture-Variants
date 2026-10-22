@@ -21,6 +21,7 @@ LOADED_KEYS = ("arm", "seed", "steps", "stage", "status", "attempt", "final_trai
 GRID = [1000, 2000, 4000]
 THRESHOLD = 0.02
 CAL_SEED = 900
+EXPANSION_S = 8000        # the one pre-declared expansion value (PREREGISTRATION.md Section 7)
 
 
 def load_runs(run_dir, seed=CAL_SEED):
@@ -86,29 +87,45 @@ def next_runs(loss, grid=GRID, thr=THRESHOLD):
     return []
 
 
+def nonconvergence(grid, thr):
+    return (f"Final training loss was still improving by at least {thr * 100:.0f}% when the budget doubled, up to the largest "
+            f"budget tried ({grid[-1]} steps), so the models are not converged. Comparisons are conditional on a fixed "
+            f"{grid[-1]}-step budget.")
+
+
 def decide(loss, grid=GRID, thr=THRESHOLD):
     s1, d1, st1 = stage1(loss, grid, thr)
-    result = {"validation_used": False, "grid": grid, "threshold": thr,
+    arm_a = {f"{s}->{n}": improvement(loss, "A", s, n) for s, n in zip(grid[:-1], grid[1:])}
+    result = {"validation_used": False, "grid": grid, "threshold": thr, "arm_A_relative_improvements": arm_a,
               "stage1": {"status": st1, "S_star": s1, "details": d1}}
     if s1 is None:
         result["status"] = st1
-        result["next_action"] = ("expansion trigger: add S=8000 for arm A only if the timing projection allows, else use the "
-                                 "largest grid value and record non-convergence" if st1 == "no_grid_value_qualifies"
-                                 else "runs are missing")
+        if st1 == "no_grid_value_qualifies" and grid[-1] >= EXPANSION_S:
+            result.update(selected_S=grid[-1], selection_basis="pre-registered fallback: no grid value qualified, "
+                          "so use the largest value", limitation=nonconvergence(grid, thr),
+                          next_action="none: the fallback applies. No further grid values are added without approval")
+        elif st1 == "no_grid_value_qualifies":
+            result["next_action"] = ("expansion trigger: add S=8000 for arm A only if the timing projection allows, else use the "
+                                     "largest grid value and record non-convergence")
+        else:
+            result["next_action"] = "runs are missing"
         return result
     trail = []
     for s in grid[grid.index(s1):-1]:
         per, st2 = stage2(loss, s, grid, thr)
         trail.append({"S": s, "status": st2, "per_arm": per})
         if st2 == "ok":
-            result.update(status="ok", recommended_S=s)
+            result.update(status="ok", recommended_S=s, selected_S=s,
+                          selection_basis="plateau: the next grid value improves final training loss by less than the threshold on all three arms")
             break
         if st2 == "missing_runs":
             result["status"] = "missing_runs"
             break
     else:
         result["status"] = "grid_exhausted"
-        result["next_action"] = "no grid value passes on all three arms: use the largest grid value and record non-convergence as a limitation"
+        result.update(selected_S=grid[-1], selection_basis="pre-registered fallback: no grid value passes on all three arms, "
+                      "so use the largest value", limitation=nonconvergence(grid, thr),
+                      next_action="none: the fallback applies. No further grid values are added without approval")
     result["stage2"] = trail
     if result.get("status") == "ok" and result["recommended_S"] != s1:
         result["note"] = f"stage 1 gave S*={s1} but the other arms had not plateaued there, so S moved up to {result['recommended_S']} for all arms"
@@ -143,8 +160,9 @@ def main():
         for a, v in blk["per_arm"].items():
             imp = v["relative_improvement"]
             print(f"  arm {a}: {v['S']} -> {v['next_S']}: improvement {'n/a' if imp is None else f'{imp * 100:.2f}%'}  passes={v['passes']}")
-    print("\nSTATUS:", result["status"], "| recommended S:", result.get("recommended_S"), "| validation used: False")
-    for k in ("note", "next_action"):
+    print("\narm A improvements:", {k: (None if v is None else f"{v * 100:.2f}%") for k, v in result["arm_A_relative_improvements"].items()})
+    print("STATUS:", result["status"], "| SELECTED S:", result.get("selected_S"), "| validation used: False")
+    for k in ("selection_basis", "limitation", "note", "next_action"):
         if k in result:
             print(k.upper() + ":", result[k])
 
