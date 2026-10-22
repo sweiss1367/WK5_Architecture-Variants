@@ -41,9 +41,17 @@ def run(env, arm="A", seed=900, stage="calibration", *extra):
 
 
 def test_main_stage_refuses_null_steps(base_cfg, tmp_path):
-    p = subprocess.run([sys.executable, SCRIPT, "--config", os.path.join(ROOT, "configs", "arm_A.yaml"),
+    """The real config now has the approved steps, so use a copy with steps unset to exercise the guard."""
+    import copy
+    cfg = copy.deepcopy(base_cfg); cfg["train"]["steps"] = None
+    base = tmp_path / "base_null_steps.yaml"; base.write_text(yaml.safe_dump(cfg))
+    p = subprocess.run([sys.executable, SCRIPT, "--config", os.path.join(ROOT, "configs", "arm_A.yaml"), "--base", str(base),
                         "--seed", "0", "--stage", "main", "--out", str(tmp_path)], capture_output=True, text=True, cwd=ROOT)
     assert p.returncode == 2 and "train.steps is null" in p.stderr
+
+
+def test_the_committed_config_has_the_approved_step_count_and_policy(base_cfg):
+    assert base_cfg["train"]["steps"] == 8000 and base_cfg["determinism"]["policy"] == "P1"
 
 
 def test_seed_must_belong_to_stage(env):
