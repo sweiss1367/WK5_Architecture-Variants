@@ -40,7 +40,7 @@ train:
   batch_size: 128
   grad_accumulation: 1           # must stay 1; the script errors instead of falling back
   early_stopping: false
-  steps: null                    # PILOT: set from training-loss calibration, then frozen
+  steps: 8000                    # selected by the pre-registered fallback (no grid value reached <2% training-loss improvement; 4000->8000 gave 5.12%). Not converged. Approved by the user
 
 determinism:
   policy: P1                     # selected by the feasibility rule in two smoke sessions (results/determinism_decision.json); approved by the user

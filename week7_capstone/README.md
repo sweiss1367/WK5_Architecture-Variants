@@ -17,9 +17,9 @@ Planning documents:
 Layout:
 ```
 configs/   base.yaml (everything fixed) and arm_{A,B,C}.yaml (one field each)
-src/       make_data.py, model.py, run_ablation.py, choose_policy.py, smoke_checks.py, check_env.py, calibrate.py, run_calibration.py (written); analyze.py (not yet written)
+src/       make_data.py, model.py, run_ablation.py, choose_policy.py, smoke_checks.py, check_env.py, calibrate.py, run_calibration.py, run_pilot.py, analyze_pilot.py (written); analyze.py (not yet written)
 tests/     data, leakage, model, CLI-gate, calibration and environment tests (passing on CPU)
-colab/     week7_step3_smoke.ipynb (smoke test, run twice), week7_step4_calibration.ipynb (calibration only; no pilot or main cells)
+colab/     week7_step3_smoke.ipynb (smoke test, run twice), week7_step4_calibration.ipynb (calibration only), week7_step5_noise_pilot.ipynb (arm A seeds 901 and 902 only; no main cell)
 results/   per-run JSON files, tables, session manifest            (empty)
 figures/   plots                                                   (empty)
 docs/      Annex IV-style documentation                            (not yet written)

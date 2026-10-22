@@ -217,3 +217,26 @@ def test_calibration_driver_stops_for_a_human_when_no_grid_value_qualifies(env):
 def test_calibration_driver_respects_max_runs(env):
     p = subprocess.run(driver_cmd(env, str(env["tmp"] / "d.json"), "--max-runs", "1"), capture_output=True, text=True, cwd=ROOT)
     assert p.returncode != 0 and "max-runs" in p.stderr + p.stdout
+
+
+def test_pilot_driver_runs_arm_a_seeds_901_and_902_only_and_summarises_without_comparing_arms(env):
+    summary = str(env["tmp"] / "pilot_summary.json")
+    cmd = [sys.executable, os.path.join(ROOT, "src", "run_pilot.py"), "--base", env["base"], "--out", env["out"], "--manifest", env["manifest"],
+           "--summary", summary, "--steps", "12", "--allow-cpu", "--data-dir", env["data"], "--lock", env["lock"],
+           "--decision", env["decision"], "--prereg", env["prereg"], "--allow-dirty"]
+    p = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 0, p.stdout + p.stderr
+    pilot_dir = os.path.join(env["out"], "pilot")
+    assert sorted(os.listdir(pilot_dir)) == ["A_seed901_attempt1.json", "A_seed902_attempt1.json"]
+    s = json.load(open(summary))
+    assert s["arms_compared"] is False and s["test_metrics_read"] is False and s["delta_set"] is False
+    assert s["seeds"] == [901, 902] and s["n_seeds"] == 2
+    assert not os.path.exists(os.path.join(env["out"], "main")) and not os.path.exists(os.path.join(env["out"], "extension"))
+    assert subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT).returncode == 0       # re-running resumes, nothing is duplicated
+    assert len(os.listdir(pilot_dir)) == 2
+
+
+def test_pilot_driver_refuses_other_seeds(env):
+    p = subprocess.run([sys.executable, os.path.join(ROOT, "src", "run_pilot.py"), "--seeds", "0", "--base", env["base"]],
+                       capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode != 0 and "only the pilot seeds" in p.stderr + p.stdout

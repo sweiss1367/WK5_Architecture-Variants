@@ -100,7 +100,7 @@ The step count `S` is chosen so that training has reached a plateau. It is **not
 
 **Note on validation reuse.** Pilot and main runs score on the same validation windows. No model, hyperparameter or step-count decision uses validation error. Pilot validation numbers are used only for the reference arm's sanity checks and for `SD_A`. This is stated as a limitation.
 
-**S value:** `[PILOT] ______`
+**S value:** `8000`, selected by the pre-registered fallback. Stage 1 found no grid value with a final-training-loss improvement below 2% (9.22%, 6.36%, 5.12% for the three doublings from 1000 to 8000), and 8000 is the largest value tried. The models are **not converged**; this is recorded as a limitation. Stage 2 was not called for. Approved by the user.
 
 ## 8. Determinism policy selection (feasibility only)
 
