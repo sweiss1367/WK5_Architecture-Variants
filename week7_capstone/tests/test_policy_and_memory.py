@@ -56,3 +56,54 @@ def test_arm_order_rotates_across_repetitions():
     import choose_policy as CP
     arms = ["A", "B", "C"]
     assert [CP.rotated(arms, r) for r in range(4)] == [["A", "B", "C"], ["B", "C", "A"], ["C", "A", "B"], ["A", "B", "C"]]
+
+
+# ---- regression: the first pilot run modified the tracked session manifest, and the dirty-tree gate blocked the next run
+def _git(cwd, *args):
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True)
+
+
+@pytest.fixture()
+def tracked_repo(tmp_path):
+    r = tmp_path / "repo"
+    for f, body in (("src/a.py", "x = 1\n"), ("PREREGISTRATION.md", "draft\n"), ("results/session_manifest.json", "[]\n"),
+                    ("data/demand.sha256", "abc\n"), ("configs/base.yaml", "a: 1\n")):
+        (r / f).parent.mkdir(parents=True, exist_ok=True); (r / f).write_text(body)
+    _git(r, "init", "-q"); _git(r, "add", "-A")
+    _git(r, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "init")
+    return r
+
+
+def test_a_run_appending_to_the_tracked_manifest_does_not_make_the_code_dirty(tracked_repo):
+    assert RA.code_is_dirty(cwd=tracked_repo) is False
+    (tracked_repo / "results/session_manifest.json").write_text('[{"segment": 2}]\n')      # exactly what the first pilot run did
+    assert RA.code_is_dirty(cwd=tracked_repo) is False
+    (tracked_repo / "data/demand.sha256").write_text("regenerated\n")
+    (tracked_repo / "results/new_untracked.json").write_text("{}")
+    assert RA.code_is_dirty(cwd=tracked_repo) is False
+
+
+@pytest.mark.parametrize("path", ["src/a.py", "configs/base.yaml", "PREREGISTRATION.md"])
+def test_changes_to_code_configs_or_the_preregistration_still_block(tracked_repo, path):
+    (tracked_repo / path).write_text("changed\n")
+    assert RA.code_is_dirty(cwd=tracked_repo) is True
+
+
+def test_an_already_completed_run_is_skipped_before_the_gates(tmp_path, base_cfg):
+    """Resuming must not fail on a run that has nothing to execute, even if a gate would now fail."""
+    import copy, yaml
+    import check_env
+    cfg = copy.deepcopy(base_cfg); cfg["data"]["n_series"] = 2; cfg["train"].update(steps=12, warmup_steps=2)
+    cfg["measure"]["inference_latency"].update(warmup_calls=2, timed_calls=5, n_windows=5)
+    base, lock, dec = tmp_path / "b.yaml", tmp_path / "lock.txt", tmp_path / "d.json"
+    base.write_text(yaml.safe_dump(cfg)); check_env.capture(str(lock)); dec.write_text(json.dumps({"selected_policy": "P1"}))
+    cmd = [sys.executable, os.path.join(ROOT, "src", "run_ablation.py"), "--config", os.path.join(ROOT, "configs", "arm_A.yaml"),
+           "--base", str(base), "--seed", "901", "--stage", "pilot", "--out", str(tmp_path / "runs"), "--manifest", str(tmp_path / "m.json"),
+           "--data-dir", str(tmp_path / "d"), "--lock", str(lock), "--decision", str(dec), "--prereg", str(tmp_path / "p.md"),
+           "--allow-cpu", "--allow-dirty"]
+    assert subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT).returncode == 0
+    os.remove(lock)                                                   # a gate that would now refuse a new run
+    again = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    assert again.returncode == 3 and "already completed" in again.stdout
+    fresh = subprocess.run(cmd[:cmd.index("--seed") + 1] + ["902"] + cmd[cmd.index("--seed") + 2:], capture_output=True, text=True, cwd=ROOT)
+    assert fresh.returncode == 2 and "is missing" in fresh.stderr     # but a NEW run is still refused by the gate

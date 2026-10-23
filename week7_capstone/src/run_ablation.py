@@ -109,12 +109,24 @@ def sh(cmd):
         return None
 
 
+GENERATED = (":(exclude)results", ":(exclude)data")     # outputs that runs legitimately write, e.g. the session manifest
+
+
+def code_is_dirty(cwd=None):
+    """True if a tracked file differs from the commit. Generated output folders (results/, data/) are ignored: a run
+    appends to the tracked session manifest, and that must not block the next run. Source, configs and the
+    pre-registration still count."""
+    out = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no", "--", ".", *GENERATED],
+                         capture_output=True, text=True, timeout=10, cwd=cwd)
+    return bool(out.stdout.strip())
+
+
 def env_info(device):
     packages = sorted(f"{d.metadata['Name']}=={d.version}" for d in importlib.metadata.distributions())
     info = {"host": socket.gethostname(), "python": platform.python_version(), "platform": platform.platform(),
             "torch": torch.__version__, "cuda_runtime": torch.version.cuda, "device_type": device.type,
             "packages_sha256": hashlib.sha256("\n".join(packages).encode()).hexdigest(),
-            "git_commit": sh(["git", "rev-parse", "HEAD"]), "git_dirty": bool(sh(["git", "status", "--porcelain", "--untracked-files=no"]))}
+            "git_commit": sh(["git", "rev-parse", "HEAD"]), "git_dirty": code_is_dirty()}
     if device.type == "cuda":
         p = torch.cuda.get_device_properties(0)
         info.update(gpu_name=p.name, gpu_memory_gb=round(p.total_memory / 1e9, 2),
@@ -381,15 +393,15 @@ def main():
     policy = cfg["determinism"]["policy"]
     configure_policy(policy)
     info = env_info(device)
-    gates = enforce_gates(args, cfg, st, info)
     run_dir = os.path.join(args.out, st)
-    os.makedirs(run_dir, exist_ok=True)
-    os.makedirs(os.path.dirname(args.manifest) or ".", exist_ok=True)
     # calibration runs the same arm and seed at several step counts, so the step count is part of the run key there
     prefix = f"{arm}_seed{args.seed}" + (f"_S{cfg['train']['steps']}" if st == "calibration" else "")
-    if st != "smoke" and has_completed(run_dir, prefix):
+    if st != "smoke" and has_completed(run_dir, prefix):      # nothing will execute, so this is checked before the gates
         print(f"{prefix}: already completed in stage '{st}', skipping")
         sys.exit(3)
+    gates = enforce_gates(args, cfg, st, info)
+    os.makedirs(run_dir, exist_ok=True)
+    os.makedirs(os.path.dirname(args.manifest) or ".", exist_ok=True)
     attempt = next_attempt(run_dir, prefix)
     stem = os.path.join(run_dir, f"{prefix}_attempt{attempt}")
     marker = stem + ".running"
