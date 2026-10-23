@@ -1,0 +1,33 @@
+{
+ "created_utc": "2026-10-23T16:49:29.463122+00:00",
+ "matplotlib": "3.11.2",
+ "inputs_sha256": {
+  "results/runs/main/A_seed0_attempt1.json": "f2bf778ec5bb994f71c0006f58ef53709d5105461a2f3c2736b84763a34bd48e",
+  "results/runs/main/A_seed1_attempt1.json": "55b589e5c08f9b68d771ab15a6144b9429442cb61acba8627fc665582a49b92b",
+  "results/runs/main/A_seed2_attempt1.json": "9903c356e0232c4103c4e7fcd53500c7365fd321b7411ac9389a3570158148f5",
+  "results/runs/main/B_seed0_attempt1.json": "1bea8937b253a422a4d9315dc50811af54eba859d98ce9ff4116043e2d32e2f9",
+  "results/runs/main/B_seed1_attempt1.json": "3ad72e39110c13b63ee49f3cae252ccae7ae35cf19e260bcaff2c2e0bebc30e5",
+  "results/runs/main/B_seed2_attempt1.json": "03e53db3d9f6b4a44f77d986454d4d27cda86b67b89d95b78895a71cc8f2960b",
+  "results/runs/main/C_seed0_attempt1.json": "d6a91bc00e063fce7b0173f7023fbc712e13cbc47637e658d1184105203c5e56",
+  "results/runs/main/C_seed1_attempt1.json": "82c159bb9947ba71c01a70aeeb7cc3624bb996c91287cdcbd177371512567a92",
+  "results/runs/main/C_seed2_attempt1.json": "23d3811df72612764242ed580270cd2e0c3d17826c9e1b007f76e030e318ecd7"
+ },
+ "delta": 0.1,
+ "k": 2.0,
+ "palette": {
+  "A": "#2a78d6",
+  "B": "#eb6834",
+  "C": "#1baf7a"
+ },
+ "palette_check": "validate_palette.py --mode light --pairs all: all hard checks pass; aqua contrast 2.74:1 so every mark is directly labelled and results/main_runs.csv is the table view",
+ "figures": [
+  ".gitkeep",
+  "fig1_seed_level_mape.png",
+  "fig1_seed_level_mape.svg",
+  "fig2_matched_differences.png",
+  "fig2_matched_differences.svg",
+  "fig3_cost.png",
+  "fig3_cost.svg",
+  "figure_manifest.json"
+ ]
+}
