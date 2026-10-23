@@ -1,6 +1,6 @@
 # EXPERIMENT_PLAN.md: CST 627 Week 7 Capstone
 
-**Status:** DRAFT v16. A repeated seed 901 run reproduced the original bitwise (Section 29). Seed 902 is still outstanding, so the pilot is still incomplete. (v15 text follows.) DRAFT v15. The pilot stopped after seed 901 because of a gate bug (Section 28); the bug is fixed in the code and the pilot still needs seed 902. (v14 text follows.) DRAFT v14. The noise pilot is INCOMPLETE: seed 901 ran, seed 902 did not (Section 27). δ and k are untouched and nothing is frozen. (v13 text follows.) DRAFT v13. `train.steps: 8000` is set (user-approved). The noise-pilot code and notebook are written and tested on CPU; the pilot has not been run. (v12 text follows.) DRAFT v12. The 8000-step expansion has run (Section 25): no grid value qualified, so the pre-registered fallback selects S=8000 with an incomplete-convergence limitation. `train.steps` is still null pending the user's approval. (v11 text follows.) DRAFT v11. Run ledger reconciled and the 8000-step expansion authorised by the user (Section 24). The expansion run itself has not been executed. (v10 text follows.) DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
+**Status:** DRAFT v17. The noise pilot is complete (Section 30). A δ is proposed for approval; δ and k are still unchanged in the pre-registration, which is not frozen, and the main experiment has not started. (v16 text follows.) DRAFT v16. A repeated seed 901 run reproduced the original bitwise (Section 29). Seed 902 is still outstanding, so the pilot is still incomplete. (v15 text follows.) DRAFT v15. The pilot stopped after seed 901 because of a gate bug (Section 28); the bug is fixed in the code and the pilot still needs seed 902. (v14 text follows.) DRAFT v14. The noise pilot is INCOMPLETE: seed 901 ran, seed 902 did not (Section 27). δ and k are untouched and nothing is frozen. (v13 text follows.) DRAFT v13. `train.steps: 8000` is set (user-approved). The noise-pilot code and notebook are written and tested on CPU; the pilot has not been run. (v12 text follows.) DRAFT v12. The 8000-step expansion has run (Section 25): no grid value qualified, so the pre-registered fallback selects S=8000 with an incomplete-convergence limitation. `train.steps` is still null pending the user's approval. (v11 text follows.) DRAFT v11. Run ledger reconciled and the 8000-step expansion authorised by the user (Section 24). The expansion run itself has not been executed. (v10 text follows.) DRAFT v10. Calibration stage 1 has run (Section 23): no grid value qualified, and the pre-declared expansion to S=8000 for arm A is prepared but not yet run. `train.steps` is still null. (v9 text follows.) DRAFT v9. The user approved P1 and calibration; `determinism.policy` is now `P1` in `configs/base.yaml`, the default-kernel cost profile was declined, and the calibration notebook exists but has not been run. (v8 text follows.) DRAFT v8. Two GPU smoke sessions have been run and reviewed (Section 21). The fixes from the first were verified in the second, and every smoke check passes. The policy decision (P1) is recorded in `results/determinism_decision.json`, but `determinism.policy` in `configs/base.yaml` is **still null** until the user approves it. Calibration has not started. (v6 text follows.) DRAFT v6. Step 3 code (`choose_policy.py`, `smoke_checks.py`, `check_env.py`, `calibrate.py`, Colab smoke notebook) is written. See Section 21 for what the first T4 session showed. (v5 text follows.) Build step 1 (scaffold, configs, draft PREREGISTRATION.md) and step 2 (`make_data.py`, `model.py`, `run_ablation.py`, tests) are done and tested on CPU. Nothing has been run on a GPU. Proposed as the execution plan. **The factor is locked: positional encoding** (Q1 confirmed by you: it was covered in earlier weeks). Items are tagged [M] mandatory, [A] adopted commitment, [R] recommended, using the tiers defined in `REQUIREMENTS.md` Section 5. No implementation exists. Nothing here has been run, so every number below is a planning estimate and is labeled as one.
 **Companion file:** `REQUIREMENTS.md` (approved). Status of decisions D1-D12 is tracked in Section 15 of this file.
 **Location rule:** all Week 7 work lives in `week7_capstone/`. Earlier coursework is not modified.
 
@@ -815,3 +815,69 @@ The two MAPE values differ by **0.0007 points (0.01%)**. Final training loss dif
 **What this shows.** Under policy P1, on one GPU and one commit, a complete 8000-step run is **exactly** reproducible: the same seed gives the same weights, the same loss curve and the same validation MAPE, to every digit. This extends the 100-step determinism check from the smoke sessions to a full-length run. It means that any spread across seeds is genuine seed-to-seed variation (initialisation, data order, dropout), with no nondeterministic noise on top of it, at least on one GPU.
 
 **What it does not show.** It was one GPU. Reproducibility across different physical GPUs, drivers or library versions is not claimed. Seed 900's calibration run came from another GPU, so any difference between it and seeds 901 and 902 includes that. Timing and latency are not reproducible (0.8% and 6% apart here) and must be quoted with their spread.
+
+## 30. Noise pilot result and review package (for approval before the nine-run experiment)
+
+### 30.1 Observed (arm A only, 8000 steps, policy P1; `results/pilot_summary.json`)
+| Seed | Source | Val MAPE % | Final train loss | Train time | Physical GPU | Commit |
+|---|---|---|---|---|---|---|
+| 900 | calibration (reused) | 4.67367 | 0.04299 | 291.2 s | `...ec068e0d` | `198aad88` |
+| 901 | pilot | 4.67434 | 0.04371 | 312.4 s | `...caf79b7d` | `f9437a57` |
+| 902 | pilot | 4.66130 | 0.04362 | 325.9 s | `...cadf781b` | `03d5e16d` |
+
+- Mean **4.66977**, SD (n-1) **0.00734**, range **0.01304** (0.28% of the mean). 95% interval for the true SD from three seeds: **0.0038 to 0.0461** (about 0.52 to 6.3 times the estimate).
+- Seasonal baselines (validation MAPE): 7.081 (previous day), 7.171 (same hour last week). Arm A is **2.411 points (34.1%)** better than the better one (scale information).
+- Peak training memory 623.3 MiB in every run. Training time 291 to 326 s (a 12% spread across sessions). All gates passed; environment equal to the lock; same package list hash in every session. Test metrics were not read and no arms were compared (`arms_compared: false`, `test_metrics_read: false`, `delta_set: false`).
+
+### 30.2 Provenance and deviations (all recorded)
+- **Three seeds, three commits, three physical GPUs, three sessions.** I diffed the commits: `model.py`, `make_data.py`, the arm configs, the dataset and the training logic are identical across them. The differences are the gate logic in `run_ablation.py` (the dirty-tree check and the order of the "already completed" skip) and `base.yaml` `steps`, which seed 900 had as an override with an identical merged-config hash (`7d63c8ef26b1f99d`). Dataset hash `65d899e6...` in all three.
+- Seed 901 also ran twice on one GPU and commit. The repeat was bitwise identical (Section 29) and is not counted as a seed.
+- The earlier gate bug and the failed attempts are documented in Section 28. No result was lost or altered.
+
+### 30.3 How far to trust the spread
+1. **Three seeds is a rough estimate.** The interval above is wide. A sample SD from three values can easily be several times too small or too large. It informs interpretation. It does **not** guarantee statistical significance, and it does not make a three-seed comparison safe.
+2. **Seed and GPU are confounded in the pilot.** Each seed ran on a different physical T4. Same-GPU reproducibility is exact (Section 29). Reproducibility across physical GPUs was **not tested**, so the 0.0073 spread may include a GPU component. In the main experiment all nine runs should be in one session on one GPU, so the matched differences are not affected by this.
+3. **Reference arm only.** Arms B and C may be noisier or quieter. Their spread is unknown until the main runs.
+4. **Not converged.** All values are at a fixed 8000-step budget (limitation from Section 25).
+
+### 30.4 Proposed δ (for the user's decision; nothing is set)
+Rule from the pre-registration: δ is the smallest mean paired validation-MAPE difference that would be worth acting on in a forecasting release decision, a multiple of 0.05 points, argued from **scale information only** (arm A's MAPE level and the seasonal baselines), never from between-arm differences or from `SD_d`.
+
+Disclosure: the SD was visible to me before this proposal was written, so I list candidates by their scale first and report the feasibility numbers separately. The user should choose by practical meaning.
+
+| Candidate δ | Share of arm A's MAPE (4.670) | Share of its advantage over the better baseline (2.411) |
+|---|---|---|
+| 0.05 | 1.07% | 2.07% |
+| **0.10 (recommended)** | **2.14%** | **4.15%** |
+| 0.25 | 5.35% | 10.37% |
+
+**Recommendation: δ = 0.10 MAPE points.** Argument: a change of 0.10 points is about 2% of the reference model's error and about 4% of the value that the model adds over a trivial seasonal forecast. Smaller than that, a difference is too small to justify changing the architecture. Larger than that (0.25, a 5% change in error) would ignore differences that are still material relative to the model's advantage. This argument uses no between-arm result and no variance.
+
+**Feasibility check (does not change δ; reported as the pre-registration requires).** The pre-registration compares `k x sqrt(2) x SD_A` with δ, with k = 2:
+| | `k x sqrt(2) x SD` | δ = 0.05 | δ = 0.10 | δ = 0.25 |
+|---|---|---|---|---|
+| At the estimate (SD 0.0073) | 0.0208 | 2.4x larger | 4.8x larger | 12x larger |
+| At the upper 95% bound (SD 0.0461) | 0.1305 | 0.4x (not separable) | 0.8x (not separable) | 1.9x larger |
+If the true seed spread is near the estimate, δ = 0.10 is comfortably detectable. If it is near the upper end of the interval, δ = 0.10 is not. This is the honest uncertainty from three seeds. If the main-run `SD_d` turns out large, the report will say the design cannot separate differences of size δ, and will state the smallest difference it could separate. δ is not lowered afterwards.
+
+### 30.5 The exact decision rule (unchanged from the pre-registration; k stays 2)
+For comparison arm X (B or C) and seed s: `d_s = MAPE(X, s) - MAPE(A, s)`; negative means X has lower error. Reported for each comparison: all three `d_s`, the mean `d_bar`, `SD_d` (n-1) and the three leave-one-out means.
+| Verdict | Conditions (all must hold) |
+|---|---|
+| **Supported, tentative** | (a) all `d_s` share a sign; (b) `|d_bar| >= delta`; (c) `|d_bar| >= k x SD_d`; (d) every leave-one-out mean has the same sign and magnitude `>= delta` |
+| **Direction only** | (a) and (b) hold, but (c) or (d) does not |
+| **No difference detectable at this budget** | Anything else |
+No verdict is called "confirmed", no p-values are reported, and every report states `k x SD_d`, the smallest mean difference that would have satisfied (c). Chance alone gives three same-sign differences 25% of the time (2 x 0.5^3), so (a) cannot carry a claim by itself. The primary hypothesis is neutral (the encoding affects accuracy); the RoPE-worse conjecture is secondary and is reported plainly if it fails or reverses. The seed list for the main experiment is 0, 1, 2, matched across arms (identical shared initial weights, data order and dropout stream per seed).
+
+### 30.6 Remaining workload (estimates; basis: measured 8000-step train times 291 to 326 s, mean 310 s, plus about 6 s start-up and arm factors 1.00, 1.02, 1.15)
+| Item | Runs | Estimate | Required? |
+|---|---|---|---|
+| Main: 3 arms x 3 seeds | 9 | 49.9 min | **Yes** |
+| Retry reserve | up to 3 | 18.1 min | Reserve only |
+| Optional extension (seeds 3 and 4) | 6 | 33.3 min | No; not recommended before the three-seed result is reviewed |
+Required including reserve: **1.13 h** (1.47 h in a 30% slower session). Main alone 0.83 h. With the extension 1.69 h (2.19 h at +30%). All are within the three-hour ceiling.
+
+### 30.7 Decisions needed (none taken)
+1. Choose δ (recommended 0.10 MAPE points; 0.05 or 0.25 are the alternatives) and confirm k = 2.
+2. Approve freezing the pre-registration with those values. I would then fill the placeholders (δ, its argument, the freeze commit and time) and block any later edit except through the amendment log.
+3. Approve the nine-run main experiment, in one session, on the frozen commit, with the optional extension left undeclared unless you choose otherwise.
