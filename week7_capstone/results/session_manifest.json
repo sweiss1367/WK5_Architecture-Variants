@@ -58,5 +58,20 @@
   "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
   "git_commit": "03d5e16d61b548440e6eb691913f51fd126c4f11",
   "device_type": "cuda"
+ },
+ {
+  "segment": 4,
+  "session_id": "boot-5a858552-c1a5-4917-832b-2d4543eff4ec",
+  "first_seen_utc": "2026-10-23T15:40:46.032120+00:00",
+  "policy": "P1",
+  "host": "265bd09f1e5a",
+  "gpu_name": "Tesla T4",
+  "gpu_uuid": "GPU-76a8a331-6682-f13a-ba6b-bd580e2060a0",
+  "driver": "580.82.07",
+  "cuda_runtime": "13.0",
+  "torch": "2.11.0+cu130",
+  "packages_sha256": "b506fea2ebda4c1c61dc5e0149e1277a467aa2a8a2ba7c7a0154a4162c0ccb87",
+  "git_commit": "8c561c196589cc4c7ee7789dced7c95723e805c1",
+  "device_type": "cuda"
  }
 ]
