@@ -135,3 +135,19 @@ decision and deviation), `PREREGISTRATION.md` (frozen before the main runs).
   to change delta.
 - Local test environments here use newer library versions than the lock, so tests on CPU do not reproduce the
   GPU-session numbers. Only the Colab session did.
+
+## What was tested in a clean environment
+
+Fresh clone of branch `claude/trusting-pascal-1qjsp0`, fresh virtual environment, Python 3.13, CPU only, following the
+commands above:
+
+- Section 1 (no GPU): `freeze.py --verify` reports 13 files match. `analyze_main.py` output equals the committed
+  `main_summary.json` except for the `created_utc` line. `make_figures.py` reproduces the PNGs byte for byte; the SVGs
+  and `figure_manifest.json` differ only in metadata such as the creation time.
+- Section 2 (`torch==2.11.0`, `numpy==2.1.3`, `PyYAML==6.0.3`): `make_data.py --verify` regenerates the dataset with
+  hash `65d899e6...` and passes the leakage check. 124 tests pass (about 9.5 minutes).
+- `check_env.py --verify` reports one difference from the lock: torch installs as `2.11.0` from PyPI, the lock says
+  `2.11.0+cu130`. Real runs need the lock to match, as stated above.
+
+Not tested outside the original session: the GPU training path (the nine runs and the Colab notebooks), because no GPU was
+available for the clean check.
