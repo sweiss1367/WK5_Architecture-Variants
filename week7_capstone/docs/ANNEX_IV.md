@@ -10,19 +10,31 @@ Annex IV of Regulation (EU) 2024/1689 sets for technical documentation under Art
 conformity assessment. No system was placed on the market or put into service. No EU declaration of conformity, notified-body
 review, quality management system or post-market monitoring plan exists, and none is claimed.
 
-**Sourcing.** The Annex IV headings and the Article 11 requirement used here come from a secondary summary of the
-Regulation supplied for this assignment, not from the Official Journal text, which I could not open from my working
-environment. Before submission, each heading and the Article 11(1) wording should be checked against the Regulation on
-EUR-Lex. Application dates and amending acts are left out because they do not affect this exercise and I could not verify
-them.
+**Sourcing.** The legal text used here is Regulation (EU) 2024/1689 as published in the Official Journal on
+12 July 2024 (ELI `http://data.europa.eu/eli/reg/2024/1689/oj`): Article 11, Annex IV, Article 6, Annex III, Article 9,
+Article 43 and recital 55. I have not checked whether later acts have amended it.
 
-**Classification assumption.** Annex IV applies to providers of high-risk systems, so the first step in a real file is
-classification under Article 6. I have not done that analysis against the Regulation's text. This exercise treats the
-forecaster as if it were a candidate high-risk system, for example one feeding grid operations planning, because that
-use gives the documentation a purpose. A load forecaster used only for planning may well fall outside the high-risk
-categories. That question stays open here.
+**What Article 11 and Annex IV ask for.** Article 11(1) says the technical documentation of a high-risk AI system is drawn up
+before the system is placed on the market or put into service, kept up to date, written to demonstrate compliance with the
+requirements of Chapter III, Section 2, and to give authorities and notified bodies the information to assess it "in a clear
+and comprehensive form". It must contain at least the elements of Annex IV, which has nine numbered points. This document
+follows those nine headings.
 
-## 1. Purpose and general description (Annex IV, section 1)
+**Classification, and why this exercise is outside the Regulation anyway.** Annex IV applies to high-risk systems, so a real
+file starts with Article 6. The only Annex III entry that could touch this system is point 2: AI systems "intended to be used
+as safety components in the management and operation of critical digital infrastructure, road traffic, or in the supply of
+water, gas, heating or electricity". Article 3(14) defines a safety component by its safety function, and recital 55 describes
+such components as systems used to directly protect the physical integrity of critical infrastructure or the health and
+safety of persons and property (its examples are water-pressure monitoring and fire-alarm control). My reading is that a
+demand forecaster used for planning is not obviously a safety component in that sense, so it would probably not fall under
+point 2. That is my reading of the text, not a legal opinion. Separately, Article 2(6) excludes AI systems developed and put
+into service solely for scientific research, and Article 2(8) excludes research, testing and development before a system is
+placed on the market. This coursework study was never placed on the market, so the Regulation does not apply to it. The
+document uses the Annex IV structure by choice, to practise documenting evidence in an auditor-readable way. If the
+system were high-risk under Annex III point 2, Article 43(2) would route it to conformity assessment by internal control
+(Annex VI), without a notified body.
+
+## 1. Purpose and general description (Annex IV, point 1)
 
 **Intended purpose of the study.** To decide whether the positional encoding of a small time-series transformer should be
 changed, judged on forecast accuracy and on runtime cost. The model reads 168 hours of demand for one meter and predicts
@@ -39,9 +51,10 @@ RoPE in general. The data are synthetic and the model is small.
 
 **Hardware and software.** Nine runs on one Tesla T4 in one Colab session, Python 3.13, `torch==2.11.0+cu130`,
 `numpy==2.1.3`, `PyYAML==6.0.3` (`requirements.lock.txt`). The repository runs the analysis and tests on CPU. There are no
-deployers, no instructions for use and no versioned release, because nothing was deployed.
+deployers, no user interface, no instructions for use (point 1(g), (h)) and no versioned release, because nothing was
+deployed. Point 1(f), photographs of a product, does not apply.
 
-## 2. Development and design process (Annex IV, section 2)
+## 2. Development and design process (Annex IV, point 2(a) to (c), (e), (f))
 
 **Design choice and its rationale.** A one-factor ablation. Shared backbone weights are initialised from the seed, the
 positional module from `seed + 10000` and training from `seed + 20000`, so the three arms start from bitwise-identical
@@ -63,11 +76,13 @@ mean pooling over positions and a linear head (output `1 + head(mean-pool)`).
   a tuned deployment.
 - **No per-arm tuning, no early stopping, final-step weights only.**
 
-**Data (see section 3), human oversight and pre-determined changes.** Human oversight and pre-determined changes are
-not applicable: the system has no deployers. What did exist was oversight of the experiment itself. The decision rule was
-frozen before the nine runs, and every stage needed explicit approval before the next began.
+**Human oversight (point 2(e)) and pre-determined changes (point 2(f)).** Point 2(e) asks for an assessment of the oversight
+measures a system needs under Article 14. I did not make that assessment, because there is no deployer and no
+decision the model's output feeds. The model has no pre-determined changes. What did exist was oversight of the experiment
+itself: the decision rule was frozen before the nine runs, and every stage needed explicit approval before the next began.
+Computational resources (point 2(c)): one Tesla T4, about 75 minutes in total for calibration, pilot and the nine main runs.
 
-## 3. Data provenance and governance (Annex IV, section 2, data)
+## 3. Data provenance and governance (Annex IV, point 2(d); Article 10)
 
 | Item | Detail |
 |---|---|
@@ -77,13 +92,14 @@ frozen before the nine runs, and every stage needed explicit approval before the
 | Split | By time, no shuffling: 24 months train, 6 validation, 6 test. Windows are split by target time, start at midnight, stride 24 h. |
 | Window counts | 11,568 train, 2,912 validation, 2,928 test. |
 | Leakage control | A leakage check runs with every data build (and in the test suite). Calibration used training loss only, and code gates block validation and test metrics for arms B and C in the calibration and pilot stages. |
+| Labelling and cleaning | No labels: the target is the next 24 hours of the same series. Gaps are filled with the last earlier value. Outlier hours are part of the generated series and were not removed. |
 | Personal data | None. Real data would bring Article 10 questions (representativeness, bias, personal data), which this exercise does not address. |
 
 **Honest limit.** Synthetic data can show whether the arms differ on this generator. It cannot show how they would behave on
 real load curves, whose structure the generator only imitates. The generator's weekly and daily patterns may also favour
 some positional schemes over others.
 
-## 4. Training methodology (Annex IV, section 2)
+## 4. Training methodology (Annex IV, point 2(a), (b), (c))
 
 AdamW, learning rate 0.001, weight decay 0.01, 100 warmup steps then linear decay, batch size 128, no gradient
 accumulation, fp32, normalised L1 loss. Main stage: three arms times seeds 0, 1 and 2 in one GPU session on the frozen
@@ -95,13 +111,17 @@ mixed into the main tables.
 (`results/freeze_record.json`). The runner refuses to start unless the record verifies. After the runs,
 `python src/freeze.py --verify` still reports that 13 files match.
 
-## 5. Evaluation metrics and results (Annex IV, section 4)
+## 5. Evaluation metrics and results (Annex IV, points 2(g) and 4)
 
 **Metric choice.** Primary metric: validation MAPE (percent), because a percentage error is comparable across meters of
 different size and is the form a demand planner reads. Secondary: validation MAE in kW, test MAPE, training time, batch-1
 inference latency (p50) and peak memory. MAPE is undefined near zero demand, so the generator enforces a positive floor;
 MAPE also weights errors at low demand more heavily than errors at peak demand, which may not match what matters
 operationally. Two seasonal baselines score 7.08 and 7.17.
+
+**Test logs (point 2(g)).** Every run writes a JSON record with start and finish times, commit, GPU, metrics and hashes, and the
+results are in `results/runs/`. Annex IV asks for test reports dated and signed by the responsible persons. These records are
+dated but not signed.
 
 **Decision rule (frozen).** For each comparison with arm A, d is the per-seed MAPE difference. A tentative call needs all
 three differences to share a sign, |mean| at least 0.10 points, |mean| at least 2 times the standard deviation of d, and
@@ -125,7 +145,7 @@ configuration. They are not a general statement about RoPE.
 positional encoding for accuracy. Learned and sinusoidal encodings showed no detectable difference at the tested budget.
 RoPE added a measurable runtime cost without an accuracy improvement that met the rule.
 
-## 6. Limitations, known risks and residual risk (Annex IV, section 5)
+## 6. Limitations, known risks and residual risk (Annex IV, points 3 and 5)
 
 | Risk or limit | Why it matters | What was done | Residual |
 |---|---|---|---|
@@ -139,15 +159,15 @@ RoPE added a measurable runtime cost without an accuracy improvement that met th
 | Cybersecurity and robustness | A real system needs Article 15-style checks. | Not assessed. | Not assessed. |
 | Optional extension (seeds 3 and 4) | More seeds would tighten the estimate. | Not run; the three-seed results stay primary. | Open. |
 
-## 7. Lifecycle, standards, declaration and monitoring (Annex IV, sections 6 to 9)
+## 7. Monitoring, lifecycle, standards, declaration, post-market (Annex IV, points 3 and 6 to 9)
 
 | Annex IV section | Status in this exercise |
 |---|---|
-| 3. Monitoring, functioning and control | Run files record commit, GPU id, session, policy, config hash and data and weight hashes. No deployed system exists, so no operational logging or alerts. |
+| 3. Monitoring, functioning and control | Capabilities, limitations and foreseeable unintended outcomes are in section 6. Run files record commit, GPU id, session, policy, config hash and data and weight hashes. No deployed system exists, so no operational logging or alerts. |
 | 6. Changes through the lifecycle | Changes are logged in `EXPERIMENT_PLAN.md`, the amendment log in `PREREGISTRATION.md`, the git history and `session_manifest.json`. One deviation is recorded: the 8000-step calibration used commit `198aad8` rather than the pinned `c8ab0d2`, and a diff showed no run-executing code changed. |
-| 7. Harmonised standards | None applied. The next section maps the work to two frameworks, which is not a claim of conformity to any standard. |
-| 8. EU declaration of conformity | **Not produced.** |
-| 9. Post-market monitoring plan | **Not produced.** There is no market placement to monitor. |
+| 7. Harmonised standards | None applied. Point 7 then asks for a description of the solutions adopted and other standards used; this document is that description. Section 8 maps the work to two frameworks, which is not a claim of conformity to any standard. |
+| 8. EU declaration of conformity (Article 47) | **Not produced.** |
+| 9. Post-market monitoring plan (Article 72(3)) | **Not produced.** There is no market placement to monitor. |
 
 ## 8. Crosswalk to NIST AI RMF and ISO/IEC 42001
 
@@ -166,6 +186,6 @@ accountability beyond one analyst), the gap is real and is not covered by this t
 
 ## 9. Open items before submission
 
-1. Check the Annex IV heading list and the Article 11(1) wording against the Regulation on EUR-Lex.
-2. Analyse Article 6 classification against the Regulation's text and replace the assumption in section 0.
-3. Confirm the crosswalk level of detail against what the course materials ask for.
+1. If the course expects a classification conclusion, have the Article 6 and Annex III point 2 reading in section 0 checked,
+   since it is my reading and not a legal opinion.
+2. Check whether the Regulation has been amended since the 2024 text used here.
