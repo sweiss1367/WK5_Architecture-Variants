@@ -1,7 +1,7 @@
 # REQUIREMENTS.md: CST 627 Week 7 Capstone
 
 **Title:** Seed-Varied Ablation Study and an EU AI Act Annex IV Reproducibility Package
-**Status:** DRAFT v3. Checklist now separates mandatory deliverables from adopted commitments and recommended enhancements. No implementation has started.
+**Status:** Experiment, figures, README, Annex IV summary and video outline complete. Still open: recording and uploading the video, final read of the Annex IV PDF.
 **Points:** 150 (Project, CLO4 / CLO5 / CLO6)
 
 ## 0. Sources and tags
@@ -137,28 +137,28 @@ Nothing is treated as a grading requirement unless it traces to the assignment t
 ### 7A. Mandatory deliverables [M]
 
 **Experiment**
-- [ ] One factor chosen from the five allowed (A1)
-- [ ] ≥3 settings, ≥3 random seeds per setting (A2, A3)
-- [ ] Exactly one factor changes between arms, all else held fixed, and each control decision defended (A9, Design rubric)
-- [ ] All runs inside a single free-tier Colab GPU session, or any deviation disclosed accurately (A4)
-- [ ] Dataset built by me, with scripted generation or acquisition that reruns cleanly (A5)
-- [ ] Means reported with seed-level spread (A6)
-- [ ] Plainly stated whether observed differences exceed run-to-run noise, including when spread swamps the effect (A7, Seed rubric)
-- [ ] Wall-clock latency and peak memory logged alongside validation error (A8)
-- [ ] Every run reported, including unsuccessful and inconclusive ones (A10)
+- [x] One factor chosen from the five allowed (A1)
+- [x] ≥3 settings, ≥3 random seeds per setting (A2, A3)
+- [x] Exactly one factor changes between arms, all else held fixed, and each control decision defended (A9, Design rubric)
+- [x] All runs inside a single free-tier Colab GPU session, or any deviation disclosed accurately (A4)  *(main nine runs in one T4 session; calibration and pilot sessions are disclosed)*
+- [x] Dataset built by me, with scripted generation or acquisition that reruns cleanly (A5)
+- [x] Means reported with seed-level spread (A6)
+- [x] Plainly stated whether observed differences exceed run-to-run noise, including when spread swamps the effect (A7, Seed rubric)
+- [x] Wall-clock latency and peak memory logged alongside validation error (A8)
+- [x] Every run reported, including unsuccessful and inconclusive ones (A10)
 
 **Repo**
-- [ ] Pinned dependencies (R1)
-- [ ] Seeded, config-driven entry point (R2) and config files (R3)
-- [ ] Results tables and plots (R4)
-- [ ] README a stranger can follow without contacting me (R5)
-- [ ] Environment, seeds, data generation and run order captured so the study can be rerun end to end (R6)
+- [x] Pinned dependencies (R1)
+- [x] Seeded, config-driven entry point (R2) and config files (R3)
+- [x] Results tables and plots (R4)
+- [x] README a stranger can follow without contacting me (R5)
+- [x] Environment, seeds, data generation and run order captured so the study can be rerun end to end (R6)  *(README tested in a fresh clone and venv on CPU; the GPU path was not re-run)*
 
 **Annex IV-style documentation**
-- [ ] 3-5 pages (D1)
-- [ ] System purpose, data provenance, training methodology, evaluation metrics, limitations, known risks (D2)
-- [ ] NIST AI RMF and ISO/IEC 42001 cross-references where controls map (D3)
-- [ ] Annex IV described accurately (D4)
+- [x] 3-5 pages (D1)
+- [x] System purpose, data provenance, training methodology, evaluation metrics, limitations, known risks (D2)
+- [x] NIST AI RMF and ISO/IEC 42001 cross-references where controls map (D3)
+- [x] Annex IV described accurately (D4)  *(checked against the Official Journal text; the Article 6 classification reading is flagged as my reading)*
 
 **Video**
 - [ ] 8-10 minutes, never over 10 (V2)
@@ -166,34 +166,34 @@ Nothing is treated as a grading requirement unless it traces to the assignment t
 - [ ] Own words, notes/outline only, no verbatim reading (V4)
 - [ ] Clear audio (V5)
 - [ ] MP4 preferred, MOV or WebM accepted (V6)
-- [ ] Covers the study, the package, and what the study cannot conclude, with the finding and its limits given equal clarity (V1, V8)
+- [ ] Covers the study, the package, and what the study cannot conclude, with the finding and its limits given equal clarity (V1, V8)  *(outline in docs/VIDEO_OUTLINE.md; recording is yours)*
 - [ ] Uploaded to the LMS assignment dropbox (V7)
 
 ### 7B. Adopted commitments [A]
 
-- [ ] Pre-registration file committed before any main run
-- [ ] Smoke test passed before the pilot
-- [ ] Each run saved independently, with a completed/interrupted/failed status
-- [ ] One determinism policy chosen before benchmarking, applied to every arm, limits documented
-- [ ] Matched per-seed differences with mean, SD and every individual value; interpretation rule fixed before results
-- [ ] No early stopping, fixed step count, final-step evaluation
-- [ ] Training duration and inference latency reported as separate quantities, measured with CUDA synchronization, inference after warm-up
-- [ ] Peak GPU memory counters reset before each run, measured the same way in every run
-- [ ] Resumed vs uninterrupted execution disclosed
-- [ ] Annex IV content verified against the official regulation text
+- [x] Pre-registration file committed before any main run
+- [x] Smoke test passed before the pilot
+- [x] Each run saved independently, with a completed/interrupted/failed status
+- [x] One determinism policy chosen before benchmarking, applied to every arm, limits documented
+- [x] Matched per-seed differences with mean, SD and every individual value; interpretation rule fixed before results
+- [x] No early stopping, fixed step count, final-step evaluation
+- [x] Training duration and inference latency reported as separate quantities, measured with CUDA synchronization, inference after warm-up
+- [x] Peak GPU memory counters reset before each run, measured the same way in every run
+- [x] Resumed vs uninterrupted execution disclosed
+- [x] Annex IV content verified against the official regulation text
 
 ### 7C. Recommended enhancements [R] (drop any without penalty)
 
-- [ ] Seed-level scatter plot
-- [ ] README quickstart tested in a fresh Colab runtime
-- [ ] Explicit driver script for run order
-- [ ] Pilot on separate seeds
-- [ ] Optional extension to seeds 3 and 4
-- [ ] Leave-one-seed-out check
-- [ ] Session manifest with GPU UUID and versions
-- [ ] Seasonal-naive reference baselines
-- [ ] Framework crosswalk table
-- [ ] Numbered limitations section
+- [x] Seed-level scatter plot
+- [x] README quickstart tested in a fresh clone and virtual environment (CPU; not a fresh Colab runtime)
+- [x] Explicit driver script for run order
+- [x] Pilot on separate seeds
+- [ ] Optional extension to seeds 3 and 4  *(decided not to run; three-seed results are the primary evidence)*
+- [x] Leave-one-seed-out check
+- [x] Session manifest with GPU UUID and versions
+- [x] Seasonal-naive reference baselines
+- [x] Framework crosswalk table
+- [x] Numbered limitations section
 
 ## 8. Highest-risk rubric requirements
 
