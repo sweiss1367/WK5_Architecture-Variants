@@ -1,0 +1,20 @@
+{
+ "created_utc": "2026-10-23T15:33:16.580428+00:00",
+ "frozen_commit": "09cf317e19d9fb94a5c90e3f5149b2a218805e76",
+ "files": {
+  "PREREGISTRATION.md": "cfecb336db7911b8edc081cfc69109d6774b4865eb43bf8a0778705ae2f85cbe",
+  "configs/base.yaml": "2ff8b2b0d1ed1970a305694194c48d013ccc49a01d86386eed05aadddd35f90a",
+  "configs/arm_A.yaml": "84a2a5639792092aaaceff5c61826e648c4a335030e156e86b3272677812c1bf",
+  "configs/arm_B.yaml": "04abbc4774c4de8eef428af74dfd72c2c64437c099922839ff45135eac99954b",
+  "configs/arm_C.yaml": "e44468702eaf8ce04aaefed390c56aa8b8c9b7dcdffd31b4c7e33aec2c0b5684",
+  "requirements.lock.txt": "3e5a2e4fcbf9e4aefe7b5af5b1bd616439454c7ed7f4c1a1cf2a189cfcf7a567",
+  "src/run_ablation.py": "1c5d1a8a87bfd430250e52d6a8618157a0ad2286540151175f8aa4af2893b7da",
+  "src/model.py": "535ecb50e264bbbc09109cd13c085a2af1017344336d471147aef5539c1bc3bd",
+  "src/make_data.py": "a8d90dc2d2d02459925ec097b224313af22282fe96681070796dace687f26638",
+  "src/analyze_main.py": "5f2bf6d8c8a99be999649e6f3f57ba14d27c0a9078d0826c1878360022bd0fee",
+  "src/run_main.py": "c57c4a82d29bb3013b893387e7a2689ea1903b2ec880d15c729ee366abb48c89",
+  "src/check_env.py": "47983b90b1cecdb4533d010756a54a802f96b365a09b71ef345a27fa11fa6c6a",
+  "src/freeze.py": "d3cdef1fcc8e60b91a4fad852111d40f7a85e07cd3b46e63589615b2b5289e41"
+ },
+ "note": "SHA-256 of every file that defines the experiment or its decision rule. A change to any of them blocks main and extension runs. The commit hash of the commit that adds this record is not stored here (a record cannot contain its own commit)."
+}
