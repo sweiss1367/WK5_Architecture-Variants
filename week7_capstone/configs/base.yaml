@@ -66,3 +66,11 @@ measure:
     kind: allocated              # max_memory_allocated, not reserved
     reset_before_run: true
     reset_before_inference_benchmark: true
+
+analysis:                        # frozen with the pre-registration (PREREGISTRATION.md Sections 5 and 6); training never reads this
+  primary_metric: val_mape
+  reference_arm: A
+  planned_comparisons: [[B, A], [C, A]]
+  descriptive_comparisons: [[C, B]]
+  delta_mape_points: 0.10        # practical threshold, approved by the user
+  k: 2.0                         # signal-to-spread screening multiplier, approved by the user

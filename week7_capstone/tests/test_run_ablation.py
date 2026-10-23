@@ -11,6 +11,7 @@ import torch
 import yaml
 
 import check_env
+import freeze
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPT = os.path.join(ROOT, "src", "run_ablation.py")
@@ -27,16 +28,18 @@ def env(tmp_path, base_cfg):
     lock = tmp_path / "requirements.lock.txt"; check_env.capture(str(lock))
     decision = tmp_path / "decision.json"; decision.write_text(json.dumps({"selected_policy": "P1"}))
     prereg = tmp_path / "PREREG.md"; prereg.write_text("frozen, no placeholders")
+    freeze_rec = tmp_path / "freeze_record.json"
+    freeze_rec.write_text(json.dumps(freeze.build_record(ROOT, files=["configs/arm_A.yaml", "src/model.py"])))
     return {"base": str(base), "out": str(tmp_path / "runs"), "data": str(tmp_path / "data"),
             "manifest": str(tmp_path / "manifest.json"), "tmp": tmp_path, "lock": str(lock),
-            "decision": str(decision), "prereg": str(prereg)}
+            "decision": str(decision), "prereg": str(prereg), "freeze": str(freeze_rec), "ext_approval": str(tmp_path / "extension_approval.json")}
 
 
 def run(env, arm="A", seed=900, stage="calibration", *extra):
     cmd = [sys.executable, SCRIPT, "--config", os.path.join(ROOT, "configs", f"arm_{arm}.yaml"), "--base", env["base"],
            "--seed", str(seed), "--stage", stage, "--out", env["out"], "--data-dir", env["data"],
            "--manifest", env["manifest"], "--allow-cpu", "--lock", env["lock"], "--decision", env["decision"],
-           "--prereg", env["prereg"], "--allow-dirty", *extra]
+           "--prereg", env["prereg"], "--freeze-record", env["freeze"], "--extension-approval", env["ext_approval"], "--allow-dirty", *extra]
     return subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
 
 
@@ -189,7 +192,7 @@ def driver_cmd(env, cal_decision, *extra):
     return [sys.executable, os.path.join(ROOT, "src", "run_calibration.py"), "--grid", "10", "20", "40", "--base", env["base"],
             "--runs", os.path.join(env["out"], "calibration"), "--out", env["out"], "--manifest", env["manifest"],
             "--calibration-decision", cal_decision, "--allow-cpu", "--data-dir", env["data"], "--lock", env["lock"],
-            "--decision", env["decision"], "--prereg", env["prereg"], "--allow-dirty", *extra]
+            "--decision", env["decision"], "--prereg", env["prereg"], "--freeze-record", env["freeze"], "--extension-approval", env["ext_approval"], "--allow-dirty", *extra]
 
 
 def test_calibration_driver_runs_only_what_the_rule_needs_and_never_touches_pilot_or_main(env):
@@ -231,7 +234,7 @@ def test_pilot_driver_runs_arm_a_seeds_901_and_902_only_and_summarises_without_c
     summary = str(env["tmp"] / "pilot_summary.json")
     cmd = [sys.executable, os.path.join(ROOT, "src", "run_pilot.py"), "--base", env["base"], "--out", env["out"], "--manifest", env["manifest"],
            "--summary", summary, "--steps", "12", "--allow-cpu", "--data-dir", env["data"], "--lock", env["lock"],
-           "--decision", env["decision"], "--prereg", env["prereg"], "--allow-dirty"]
+           "--decision", env["decision"], "--prereg", env["prereg"], "--freeze-record", env["freeze"], "--allow-dirty"]
     p = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
     assert p.returncode == 0, p.stdout + p.stderr
     pilot_dir = os.path.join(env["out"], "pilot")
@@ -248,3 +251,71 @@ def test_pilot_driver_refuses_other_seeds(env):
     p = subprocess.run([sys.executable, os.path.join(ROOT, "src", "run_pilot.py"), "--seeds", "0", "--base", env["base"]],
                        capture_output=True, text=True, cwd=ROOT)
     assert p.returncode != 0 and "only the pilot seeds" in p.stderr + p.stdout
+
+
+def test_main_stage_is_blocked_when_a_frozen_file_has_changed(env):
+    rec = json.load(open(env["freeze"]))
+    rec["files"]["src/model.py"] = "0" * 64                                  # as if model.py had been edited after the freeze
+    open(env["freeze"], "w").write(json.dumps(rec))
+    p = run(env, "A", 0, "main")
+    assert p.returncode == 2 and "freeze does not hold" in p.stderr and "src/model.py" in p.stderr
+    assert not os.path.exists(os.path.join(env["out"], "main"))
+
+
+def test_main_stage_is_blocked_without_a_freeze_record(env):
+    os.remove(env["freeze"])
+    p = run(env, "A", 0, "main")
+    assert p.returncode == 2 and "freeze record missing" in p.stderr
+
+
+def test_the_extension_stage_needs_explicit_approval_even_when_the_freeze_holds(env):
+    p = run(env, "A", 0, "extension")                                        # seed 0 is not an extension seed, so test the approval gate directly
+    assert p.returncode == 2
+    p = run(env, "A", 3, "extension")
+    assert p.returncode == 2 and "explicit approval" in p.stderr
+    assert not os.path.exists(os.path.join(env["out"], "extension"))
+    open(env["ext_approval"], "w").write(json.dumps({"approved_by": "user"}))
+    assert "explicit approval" not in run(env, "A", 3, "extension", "--steps", "10").stderr   # with approval, this gate no longer fires
+
+
+def main_cmd(env, *extra, seeds=("0",)):
+    return [sys.executable, os.path.join(ROOT, "src", "run_main.py"), "--seeds", *seeds, "--base", env["base"], "--out", env["out"],
+            "--manifest", env["manifest"], "--allow-cpu", "--no-analysis", "--data-dir", env["data"], "--lock", env["lock"],
+            "--decision", env["decision"], "--prereg", env["prereg"], "--freeze-record", env["freeze"], "--allow-dirty", *extra]
+
+
+def test_main_driver_arm_order_rotates_by_seed_and_blocks_are_contiguous():
+    import run_main
+    assert [run_main.arm_order(i) for i in range(3)] == [["A", "B", "C"], ["B", "C", "A"], ["C", "A", "B"]]
+    p = run_main.plan()
+    assert len(p) == 9 and [s for s, _ in p] == [0, 0, 0, 1, 1, 1, 2, 2, 2]
+    assert {a for _, a in p[:3]} == {a for _, a in p[3:6]} == {a for _, a in p[6:]} == {"A", "B", "C"}
+
+
+def test_main_driver_refuses_the_extension_seeds(env):
+    p = subprocess.run(main_cmd(env, seeds=("3",)), capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode != 0 and "extension is a separate" in p.stderr + p.stdout
+
+
+def test_main_driver_runs_one_seed_block_and_refuses_a_second_session_without_allow_resume(env):
+    p = subprocess.run(main_cmd(env), capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode == 0, p.stdout + p.stderr
+    main_dir = os.path.join(env["out"], "main")
+    assert sorted(os.listdir(main_dir)) == ["A_seed0_attempt1.json", "B_seed0_attempt1.json", "C_seed0_attempt1.json"]
+    for n in os.listdir(main_dir):                                   # in the main stage no arm is blinded
+        assert json.load(open(os.path.join(main_dir, n)))["val_mape"] is not None
+    again = subprocess.run(main_cmd(env), capture_output=True, text=True, cwd=ROOT)
+    assert again.returncode == 0 and len(os.listdir(main_dir)) == 3                                  # same session: resumes, nothing duplicated
+    other = subprocess.run(main_cmd(env), capture_output=True, text=True, cwd=ROOT,
+                           env={**os.environ, "ABLATION_SESSION_ID": "a-different-session"})
+    assert other.returncode != 0 and "RESUMED" in other.stderr + other.stdout and "--allow-resume" in other.stderr + other.stdout
+    ok = subprocess.run(main_cmd(env, "--allow-resume"), capture_output=True, text=True, cwd=ROOT, env={**os.environ, "ABLATION_SESSION_ID": "a-different-session"})
+    assert ok.returncode == 0 and "NOTICE: resuming" in ok.stdout
+
+
+def test_main_driver_stops_before_any_run_when_the_freeze_is_broken(env):
+    rec = json.load(open(env["freeze"])); rec["files"]["src/model.py"] = "0" * 64
+    open(env["freeze"], "w").write(json.dumps(rec))
+    p = subprocess.run(main_cmd(env), capture_output=True, text=True, cwd=ROOT)
+    assert p.returncode != 0 and "FREEZE BROKEN" in p.stdout + p.stderr and "Nothing was run" in p.stderr + p.stdout
+    assert not os.path.exists(os.path.join(env["out"], "main"))

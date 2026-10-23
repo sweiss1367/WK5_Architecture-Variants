@@ -15,9 +15,10 @@ An .running marker next to it is removed on completion. A marker with no result 
 Blinding: in the calibration and pilot stages, arms B and C skip all validation and test evaluation, so no
 between-arm validation number exists before the pre-registration is frozen (PREREGISTRATION.md Section 6.1).
 
-Gates (non-smoke stages): requirements.lock.txt must exist and match the installed packages; tracked files must match
-the committed code; results/determinism_decision.json must exist and agree with determinism.policy; main and extension
-also require PREREGISTRATION.md to be frozen (no `______` placeholders left).
+Gates (non-smoke stages): requirements.lock.txt must exist and match the installed packages; tracked code and configs must
+match the commit (results/ and data/ are ignored); results/determinism_decision.json must exist and agree with
+determinism.policy. main and extension also require PREREGISTRATION.md to have no `______` placeholders AND a freeze record
+(results/freeze_record.json) whose file hashes still match; extension additionally needs results/extension_approval.json.
 
 Exit codes: 0 completed, 1 run failed, 2 invalid arguments, config or gate, 3 already completed (skipped).
 """
@@ -46,6 +47,7 @@ import yaml
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_env import verify as verify_env  # noqa: E402
+from freeze import verify as verify_freeze  # noqa: E402
 from make_data import check_no_leakage, generate_or_load, make_windows, normalize  # noqa: E402
 from model import POS_TYPES, TRAIN_SEED_OFFSET, build_model, param_counts, weights_sha256  # noqa: E402
 
@@ -153,6 +155,13 @@ def enforce_gates(args, cfg, stage, info):
         fail(f"determinism.policy ({cfg['determinism']['policy']}) does not match the recorded decision ({selected})")
     if stage in ("main", "extension") and "______" in open(args.prereg).read():
         fail("PREREGISTRATION.md is not frozen (placeholders remain); main and extension runs are blocked")
+    if stage in ("main", "extension"):
+        problems = verify_freeze(record_path=args.freeze_record)
+        if problems:
+            fail("the freeze does not hold: " + "; ".join(problems))
+    if stage == "extension" and not os.path.exists(args.extension_approval):
+        fail(f"{args.extension_approval} is missing: the optional extension needs the user's explicit approval after the nine main "
+             "runs and the remaining budget have been reviewed")
     return {"env_matches_lock": env["matches"], "allow_dirty": args.allow_dirty,
             "allow_env_mismatch": args.allow_env_mismatch, "decision_policy": selected}
 
@@ -351,6 +360,8 @@ def main():
     ap.add_argument("--lock", default="requirements.lock.txt")
     ap.add_argument("--decision", default="results/determinism_decision.json")
     ap.add_argument("--prereg", default="PREREGISTRATION.md")
+    ap.add_argument("--freeze-record", default="results/freeze_record.json")
+    ap.add_argument("--extension-approval", default="results/extension_approval.json")
     ap.add_argument("--allow-dirty", action="store_true", help="debug/test only; recorded in the run file")
     ap.add_argument("--allow-env-mismatch", action="store_true", help="debug/test only; recorded in the run file")
     args = ap.parse_args()
@@ -413,7 +424,8 @@ def main():
               "session_id": session_id, "segment": segment, "policy": policy, "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
               "started_utc": now(),
               "pos_encoding": cfg["model"]["pos_encoding"], "steps": cfg["train"]["steps"], "env": info,
-              "config_sha256": hashlib.sha256(json.dumps(cfg, sort_keys=True).encode()).hexdigest(), "gates": gates,
+              "config_sha256": hashlib.sha256(json.dumps({k: v for k, v in cfg.items() if k != "analysis"}, sort_keys=True).encode()).hexdigest(),
+              "gates": gates,
               "cpu_debug": device.type == "cpu"}
     try:
         with attention_context(policy):
