@@ -1,0 +1,34 @@
+{
+ "lock_path": "requirements.lock.txt",
+ "lock_present": true,
+ "matches": false,
+ "mismatches": [
+  {
+   "package": "torch",
+   "pinned": "2.11.0+cu130",
+   "installed": "2.14.1"
+  },
+  {
+   "package": "numpy",
+   "pinned": "2.1.3",
+   "installed": "2.5.3"
+  },
+  {
+   "package": "PyYAML",
+   "pinned": "6.0.3",
+   "installed": "6.0.1"
+  }
+ ],
+ "python": "3.13.16",
+ "captured_this_run": false,
+ "created_utc": "2026-10-23T16:49:50.652027+00:00",
+ "full_freeze_sha256": "f18262f9baead616c7aae27c1db0dc321687c1a619eeeeb002722ce329ee6231",
+ "full_freeze_file": "results/pip_freeze_f18262f9ba.txt",
+ "pinned_installed": {
+  "torch": "2.14.1",
+  "numpy": "2.5.3",
+  "PyYAML": "6.0.1"
+ },
+ "platform": "Linux-6.18.44-fc-v153-x86_64-with-glibc2.39",
+ "gpu": null
+}
