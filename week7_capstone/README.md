@@ -1,6 +1,6 @@
 # Week 7 Capstone: Positional-Encoding Ablation for Electricity-Demand Forecasting
 
-**Status: Step 3 code (policy timing, smoke checks, environment lock, Colab smoke notebook) written and unit-tested on CPU. The GPU smoke test has not been run yet. No GPU run, calibration, pilot or main result exists yet, and the study is not yet reproducible end to end.** This file is a stub and will be rewritten once those exist. The commands below have been checked on CPU only.
+**Status: pre-registration FROZEN (results/freeze_record.json); main experiment not yet run. Earlier: Step 3 code (policy timing, smoke checks, environment lock, Colab smoke notebook) written and unit-tested on CPU. The GPU smoke test has not been run yet. No GPU run, calibration, pilot or main result exists yet, and the study is not yet reproducible end to end.** This file is a stub and will be rewritten once those exist. The commands below have been checked on CPU only.
 
 ```
 python -m pytest tests -q                                   # data, leakage, model, CLI gates, calibration, environment
@@ -17,9 +17,9 @@ Planning documents:
 Layout:
 ```
 configs/   base.yaml (everything fixed) and arm_{A,B,C}.yaml (one field each)
-src/       make_data.py, model.py, run_ablation.py, choose_policy.py, smoke_checks.py, check_env.py, calibrate.py, run_calibration.py, run_pilot.py, analyze_pilot.py (written); analyze.py (not yet written)
+src/       make_data.py, model.py, run_ablation.py, choose_policy.py, smoke_checks.py, check_env.py, calibrate.py, run_calibration.py, run_pilot.py, analyze_pilot.py, run_main.py, analyze_main.py, freeze.py (written); analyze.py (not yet written)
 tests/     data, leakage, model, CLI-gate, calibration and environment tests (passing on CPU)
-colab/     week7_step3_smoke.ipynb (smoke test, run twice), week7_step4_calibration.ipynb (calibration only), week7_step5_noise_pilot.ipynb (arm A seeds 901 and 902 only; no main cell)
+colab/     week7_step3_smoke.ipynb (smoke test, run twice), week7_step4_calibration.ipynb (calibration only), week7_step5_noise_pilot.ipynb (arm A seeds 901 and 902 only), week7_step6_main.ipynb (the frozen nine-run main experiment)
 results/   per-run JSON files, tables, session manifest            (empty)
 figures/   plots                                                   (empty)
 docs/      Annex IV-style documentation                            (not yet written)
