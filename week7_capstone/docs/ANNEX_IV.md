@@ -12,7 +12,7 @@ review, quality management system or post-market monitoring plan exists, and non
 
 **Sourcing.** The legal text used here is Regulation (EU) 2024/1689 as published in the Official Journal on
 12 July 2024 (ELI `http://data.europa.eu/eli/reg/2024/1689/oj`): Article 11, Annex IV, Article 6, Annex III, Article 9,
-Article 43 and recital 55. I have not checked whether later acts have amended it.
+Article 43 and recital 55. This is the version provided with the assignment, and later amendments, if any, are not reflected.
 
 **What Article 11 and Annex IV ask for.** Article 11(1) says the technical documentation of a high-risk AI system is drawn up
 before the system is placed on the market or put into service, kept up to date, written to demonstrate compliance with the
@@ -184,8 +184,7 @@ clause numbers.
 Where the project does not meet the framework's intent (no incident response, no deployer feedback, no organisational
 accountability beyond one analyst), the gap is real and is not covered by this table.
 
-## 9. Open items before submission
+## 9. Open item before submission
 
-1. If the course expects a classification conclusion, have the Article 6 and Annex III point 2 reading in section 0 checked,
-   since it is my reading and not a legal opinion.
-2. Check whether the Regulation has been amended since the 2024 text used here.
+The Article 6 and Annex III point 2 reading in section 0 is my reading of the text, not a legal opinion. If the course
+expects a firm classification, have it checked.
