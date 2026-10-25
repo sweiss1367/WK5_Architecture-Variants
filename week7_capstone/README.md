@@ -101,7 +101,7 @@ colab/      one notebook per stage
 results/    runs/{calibration,pilot,main}/ per-run JSON, main_summary.json, main_runs.csv, paired_differences.csv,
             freeze_record.json, determinism_decision.json, session_manifest.json, per-session provenance folders
 figures/    fig1 seed-level MAPE, fig2 matched differences, fig3 cost, figure_manifest.json, README.md
-docs/       Annex IV-style technical documentation and the video outline
+docs/       Annex IV-style technical documentation
 data/       generated series (not committed; make_data.py regenerates it, hash 65d899e6...)
 ```
 

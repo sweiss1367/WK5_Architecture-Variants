@@ -1,7 +1,7 @@
 # REQUIREMENTS.md: CST 627 Week 7 Capstone
 
 **Title:** Seed-Varied Ablation Study and an EU AI Act Annex IV Reproducibility Package
-**Status:** Experiment, figures, README, Annex IV summary and video outline complete. Still open: recording and uploading the video, final read of the Annex IV PDF.
+**Status:** Experiment, figures, README, and Annex IV summary complete. Still open: recording and uploading the video, final read of the Annex IV PDF.
 **Points:** 150 (Project, CLO4 / CLO5 / CLO6)
 
 ## 0. Sources and tags
@@ -166,7 +166,7 @@ Nothing is treated as a grading requirement unless it traces to the assignment t
 - [ ] Own words, notes/outline only, no verbatim reading (V4)
 - [ ] Clear audio (V5)
 - [ ] MP4 preferred, MOV or WebM accepted (V6)
-- [ ] Covers the study, the package, and what the study cannot conclude, with the finding and its limits given equal clarity (V1, V8)  *(outline in docs/VIDEO_OUTLINE.md; recording is yours)*
+- [ ] Covers the study, the package, and what the study cannot conclude, with the finding and its limits given equal clarity (V1, V8)
 - [ ] Uploaded to the LMS assignment dropbox (V7)
 
 ### 7B. Adopted commitments [A]
