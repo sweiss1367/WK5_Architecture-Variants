@@ -1,153 +1,245 @@
-# Week 7 Capstone: Positional-Encoding Ablation with Seed Variation
+# Positional-Encoding Ablation for Electricity-Demand Forecasting
 
-CST 627. A small time-series transformer forecasts 24 hours of electricity demand from the previous 168 hours. The one
-factor that changes is the positional encoding:
+A pre-registered, seed-matched ablation of three positional encodings in a small time-series Transformer, with
+measured accuracy, training cost, inference latency and GPU memory, run on a single free-tier GPU.
 
-| Arm | Positional encoding | Parameters |
-|---|---|---|
-| A | learned absolute (`nn.Embedding(168, 64)`) | 162,520 |
-| B | fixed sinusoidal | 151,768 |
-| C | RoPE on queries and keys, every layer | 151,768 |
+**Headline finding (one Tesla T4, 3 seeds per arm):** at an 8,000-step budget, no positional encoding separated from
+seed noise on validation MAPE. All three beat the best seasonal-naive baseline (7.08%) by roughly 2.3 to 2.4 points.
+RoPE was about 10% slower to train and about 8% slower at batch-1 inference, with the same memory. Recommendation within
+this experiment's scope: no evidence to change the positional encoding for accuracy.
 
-Three matched seeds (0, 1, 2) per arm, 8000 steps, deterministic policy P1, nine runs in one GPU session. Everything
-except `model.pos_encoding` is identical across arms, including the initial shared weights (checked by hash).
+> Status of the numbers: every figure below was produced by the committed code on a Colab Tesla T4 and is stored as raw
+> per-run JSON in `results/runs/main/`. See [Verification status](#verification-status) for what has and has not been
+> independently re-run.
 
-## Result in brief
+## 1. Problem framing
 
-All numbers are in `results/main_summary.json` and are validation MAPE in percent, lower is better.
+Before an AI component is put into an operational workflow, the useful questions are: does a design choice change
+reliability, what does it cost to run, and how sure are we? This repository answers those questions for one concrete
+design choice.
 
-| | mean | matched difference from A (seed 0, 1, 2) | mean difference | verdict under the frozen rule |
-|---|---|---|---|---|
-| A learned | 4.667 | n/a | n/a | reference |
-| B sinusoidal | 4.658 | +0.028, -0.068, +0.011 | -0.009 | no difference detectable at this budget |
-| C RoPE | 4.757 | +0.111, +0.055, +0.106 | +0.090 | no difference detectable at this budget |
+- **Task.** Forecast the next 24 hours of electricity demand from the previous 168 hours (`context_hours: 168`,
+  `horizon_hours: 24`) for 16 synthetic series.
+- **Single manipulated factor.** The positional encoding. Everything else, including the initial shared weights (checked
+  by hash), is identical across arms.
 
-C had higher error than A on all three seeds, but the mean difference (+0.090) is below the pre-registered practical
-threshold of 0.10 points, so the frozen rule does not call it. The rule (delta = 0.10, k = 2) is a set of exploratory
-screening criteria for three seeds, not a significance test. Under P1 on one Tesla T4, arm C trained about 9.8% slower
-(343 s against 313 s) and had about 8% higher batch-1 latency (4.69 ms against 4.34 ms). Peak training memory was the same
-in all arms. These cost numbers describe this model, this hardware, this workload and this deterministic configuration;
-they are not a general statement about RoPE.
+  | Arm | Positional encoding | Parameters |
+  |---|---|---|
+  | A (reference) | learned absolute, `nn.Embedding(168, 64)` | 162,520 |
+  | B | fixed sinusoidal | 151,768 |
+  | C | RoPE on queries and keys, every layer | 151,768 |
 
-Recommendation within the scope of the experiment: no evidence to change the positional encoding for accuracy.
+- **Research question.** Does the choice change validation MAPE by more than run-to-run variation from random seeds?
+  Hypotheses, decision rule and thresholds were written and frozen before any main run (`PREREGISTRATION.md`).
+- **Primary metric.** Validation MAPE (%), lower is better. Secondary: validation MAE (kW), test MAPE (%), training time,
+  inference latency, peak GPU memory.
 
-## What you can reproduce, and where
+## 2. Results
+
+Mean ± sample SD (n − 1) over seeds 0, 1, 2. One run per arm per seed, nine runs in one uninterrupted session.
+Raw values: [`results/main_runs.csv`](results/main_runs.csv). Aggregates and decision-rule output:
+[`results/main_summary.json`](results/main_summary.json).
+
+| Metric (unit) | A learned | B sinusoidal | C RoPE |
+|---|---|---|---|
+| **Validation MAPE (%)** | 4.667 ± 0.033 | 4.658 ± 0.023 | 4.757 ± 0.014 |
+| Test MAPE (%) | 4.235 ± 0.034 | 4.214 ± 0.013 | 4.294 ± 0.012 |
+| Validation MAE (kW) | 53.02 ± 0.47 | 52.87 ± 0.26 | 53.94 ± 0.10 |
+| Training time, 8,000 steps (s) | 312.8 ± 1.7 | 312.9 ± 0.9 | 343.4 ± 0.5 |
+| Peak training memory, allocated (MB) | 623.3 | 623.2 | 623.0 |
+| Batch-1 inference latency p50 (ms) | 4.34 ± 0.21 | 4.32 ± 0.03 | 4.69 ± 0.10 |
+| Batch-1 inference latency p95 (ms) | 5.35 ± 0.38 | 5.57 ± 0.74 | 5.67 ± 0.32 |
+| Peak inference memory, allocated (MB) | 66.9 | 66.9 | 67.0 |
+
+Hardware context for every row: one Tesla T4 (15.64 GB), driver 580.82.07, CUDA runtime 13.0, PyTorch 2.11.0+cu130,
+fp32, batch size 128 for training, batch size 1 for latency, input sequence length 168, deterministic policy P1.
+Memory is `max_memory_allocated` and had zero spread across seeds, so no SD is shown.
+
+**Baselines (validation MAPE, deterministic, one computation each).** Seasonal naive (same hour yesterday): 7.08%.
+Same hour last week: 7.17%.
+
+**Matched differences from arm A in validation MAPE, percentage points (seed 0, 1, 2):**
+
+| Comparison | Per-seed differences | Mean | Verdict under the frozen rule |
+|---|---|---|---|
+| B − A | +0.028, −0.068, +0.011 | −0.009 | no difference detectable at this budget |
+| C − A | +0.111, +0.055, +0.106 | +0.090 | no difference detectable at this budget |
+
+C was worse than A on all three seeds, but the mean (+0.090) is below the pre-registered practical threshold of 0.10
+points, so the rule makes no call. The rule (δ = 0.10, k = 2) is a set of exploratory screening criteria for three
+seeds, not a significance test. Three same-sign differences occur by chance 25% of the time.
+
+**Run wall-clock.** Each training run took 311 to 344 s (about 25.7 steps/s on arm A). The nine runs took 49.3 minutes
+from first start to last finish (UTC timestamps in the run files).
+
+**Figures** (generated from the raw run files by `src/make_figures.py`): `figures/fig1_seed_level_mape.png`,
+`figures/fig2_matched_differences.png`, `figures/fig3_cost.png`. Details in `figures/README.md`.
+
+## 3. Provenance
+
+| Item | Source |
+|---|---|
+| Dataset | Synthetic hourly demand, 16 series, 3 years (26,280 hours), generated by `src/make_data.py` with `data_seed: 42`. Not downloaded. Temporal split 24 / 6 / 6 months. Float32 array hash `65d899e6…f53695` (`data/demand_7c7d3b8c34.sha256`). Windows: 11,568 train, 2,912 validation, 2,928 test. |
+| Model | Written from scratch in `src/model.py` (3 layers, d_model 64, 4 heads, d_ff 256, mean-pool head). No pretrained weights and no external model checkpoints. |
+| Configuration | `configs/base.yaml` plus one-field `configs/arm_{A,B,C}.yaml`. SHA-256 of 13 defining files in `results/freeze_record.json`. |
+| Seeds | Main seeds 0, 1, 2. Shared backbone initialised from `seed`, positional module from `seed + 10000`, training from `seed + 20000`. Pilot seeds 900 to 902 and calibration seed 900 are never mixed into main tables. |
+| Per-run provenance | Each run JSON records commit, GPU UUID, session id, policy, config hash, data hash and weight hashes. |
+
+## 4. Reproduce
+
+Training uses Python 3.13 and the pinned versions in `requirements.lock.txt` (`torch==2.11.0+cu130`, `numpy==2.1.3`,
+`PyYAML==6.0.3`). Figures additionally need `matplotlib==3.11.2` (`requirements-figures.txt`).
 
 | Goal | Needs | Command |
 |---|---|---|
-| Recompute the analysis from the committed run files | CPU, `PyYAML` | `python src/analyze_main.py` |
-| Regenerate the figures | CPU, `PyYAML`, `matplotlib` | `python src/make_figures.py` |
-| Check that the frozen files are untouched | CPU, `PyYAML` | `python src/freeze.py --verify` |
-| Regenerate the dataset and verify its hash | CPU, `numpy`, `PyYAML` | `python src/make_data.py --config configs/base.yaml --verify` |
-| Run the test suite (about 10 minutes) | CPU, `torch`, `numpy`, `PyYAML`, `pytest` | `python -m pytest tests -q` |
-| Re-run the nine training runs | one GPU, the pinned environment | `colab/week7_step6_main.ipynb` |
+| Recompute all tables from the committed raw runs | CPU, `PyYAML` | `python src/analyze_main.py` |
+| Regenerate figures | CPU, `PyYAML`, `matplotlib` | `python src/make_figures.py` |
+| Confirm frozen files are untouched | CPU, `PyYAML` | `python src/freeze.py --verify` |
+| Regenerate the dataset and check its hash | CPU, `numpy`, `PyYAML` | `python src/make_data.py --config configs/base.yaml --verify` |
+| Run the tests (about 10 min) | CPU, `torch`, `numpy`, `PyYAML`, `pytest` | `python -m pytest tests -q` |
+| Re-run the nine training runs | One GPU, pinned environment | `colab/week7_step6_main.ipynb` |
 
-The nine training runs were made on a Colab Tesla T4. Training times and latencies will differ on other hardware, and
-bitwise-identical weights are only expected on the same GPU model with the pinned library versions.
+### From a clean environment, no GPU (about 2 minutes)
 
-### 1. Quick check without a GPU
-
-```
-git clone https://github.com/sweiss1367/WK5_Architecture-Variants.git
-cd WK5_Architecture-Variants/week7_capstone
+```bash
+git clone https://github.com/sweiss1367/wk5_architecture-variants.git
+cd wk5_architecture-variants/week7_capstone
 git checkout claude/trusting-pascal-1qjsp0
-python3 -m venv .venv && . .venv/bin/activate
+python3 -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-figures.txt
 python src/freeze.py --verify          # expect: freeze holds: 13 files match
 python src/analyze_main.py             # rewrites results/main_summary.json, main_runs.csv, paired_differences.csv
-git diff --stat results                # expect only the "created_utc"-style timestamp line to differ
-python src/make_figures.py             # writes figures/*.png, figures/*.svg, figures/figure_manifest.json
+git diff --stat results                # expect only the created_utc line to differ
+python src/make_figures.py             # writes figures/*.png, *.svg, figure_manifest.json
 ```
-`analyze_main.py` reads only the nine files in `results/runs/main/` and `configs/base.yaml`. Its output should equal the
-committed `main_summary.json` apart from the timestamp.
 
-### 2. Full environment and tests
+`analyze_main.py` reads only the nine files in `results/runs/main/` and `configs/base.yaml`.
 
-The pinned environment is in `requirements.lock.txt` (Python 3.13, `torch==2.11.0+cu130`, `numpy==2.1.3`,
-`PyYAML==6.0.3`). The `+cu130` build of torch comes from the PyTorch package index, so on a machine without that
-build use:
-```
+### Full environment and tests
+
+```bash
 pip install torch==2.11.0 numpy==2.1.3 PyYAML==6.0.3 pytest
-python src/check_env.py --verify       # reports exactly what differs from the lock
+python src/check_env.py --verify       # lists exactly what differs from the lock
 python -m pytest tests -q
 ```
-The test suite uses CPU and checks the data and leakage rules, the model, the run gates (environment, clean code,
-frozen pre-registration, resume refusal, blinded evaluation), calibration, the analysis rule and the freeze record.
-A real run refuses to start if the environment differs from the lock, so `check_env.py --verify` failing on a CPU machine
-is expected and not a fault in the repository.
 
-### 3. Re-running the experiment on Colab
+A real training run refuses to start if the environment differs from the lock. On a CPU machine, `check_env.py --verify`
+reporting the `+cu130` build difference is expected.
 
-1. Open `colab/week7_step6_main.ipynb` on a T4 runtime. The notebook pins the frozen commit
-   (`8c561c196589cc4c7ee7789dced7c95723e805c1`).
-2. Run the cells in order. The cell that checks the gates must pass before any run starts: environment equals the lock,
-   code equals the frozen commit, the freeze record holds, policy P1, 8000 steps.
-3. The nine runs take about 50 to 60 minutes. Do not interrupt the run cell. If it stops, re-running resumes but the
-   driver then requires `--allow-resume` and the resume is recorded in `results/session_manifest.json`.
+### Re-running the GPU experiment (Colab, free tier)
 
-The earlier stages are kept for the record, in order: `week7_step3_smoke.ipynb` (determinism policy timing),
-`week7_step4_calibration.ipynb` (training-loss-only step calibration), `week7_step5_noise_pilot.ipynb` (arm A noise
-pilot). Calibration and pilot never use validation metrics for arms B or C.
+1. Open `colab/week7_step6_main.ipynb` on a T4 runtime. It pins the frozen commit
+   `8c561c196589cc4c7ee7789dced7c95723e805c1`.
+2. Run the cells in order. The gate cell must pass before any run starts (environment equals the lock, code equals the
+   frozen commit, freeze record holds, policy P1, 8,000 steps).
+3. The nine runs take about 50 to 60 minutes. If the session is interrupted, re-running resumes only with
+   `--allow-resume`, and the resume is recorded in `results/session_manifest.json`.
 
-## Layout
+Bitwise-identical weights are expected only on the same GPU model with the pinned library versions. Timings and
+latencies will differ on other hardware.
+
+## 5. Intended use and out-of-scope use
+
+**Intended use**
+- A worked, auditable example of how to compare design alternatives under a fixed budget with repeated seeds, recorded
+  hardware and a decision rule fixed in advance.
+- A template for reporting accuracy, cost and limitations together before a model is considered for deployment.
+- A teaching and portfolio reference for positional encodings in small time-series Transformers.
+
+**Out of scope**
+- Operational electricity-demand forecasting or any decision that affects real load, pricing, or grid operation. The data
+  is synthetic.
+- Claims about RoPE, sinusoidal or learned encodings in general, in larger models, on real data, or at convergence.
+- Production latency or capacity planning. Cost numbers describe this model, this GPU and the deterministic kernels
+  used.
+- Use as a significance test. The decision rule is a screening heuristic for three seeds.
+- Any statement about performance on a company's data. Nothing here was run on, or deployed against, business data.
+
+## 6. Limitations and threats to validity
+
+1. **Three seeds per arm.** Spreads are estimated from n = 3. The rule is exploratory, a same-sign pattern across three
+   seeds happens by chance 25% of the time, and the SD of three differences is itself rough. The optional two-seed
+   extension (seeds 3 and 4) was not run, and that decision was made after the nine results were seen.
+2. **Not converged.** The calibration rule found training loss still improving by 5.1% from 4,000 to 8,000 steps
+   (threshold 2%). The 8,000 budget came from the pre-registered fallback, so all comparisons are conditional on it. A
+   different ranking at convergence cannot be ruled out.
+3. **Synthetic data, small model.** 16 generated series and about 150,000 parameters. No calendar features, windows start
+   at 00:00 and the head is mean-pooled, which may favour absolute encodings in particular. Results may not transfer to
+   real demand data.
+4. **One GPU model, one session.** Cost results are specific to a Tesla T4 under deterministic policy P1, which was
+   measured to add roughly 18 to 20% per training step versus the alternative (`results/determinism_decision.json`).
+   Cross-GPU reproducibility was not tested.
+5. **Noise estimate mismatch.** The arm A pilot SD (0.0073, seeds 900 to 902, three different physical GPUs) was lower than
+   the SD across the main arm A seeds (0.0329). The pilot SD was not used to change δ.
+6. **Reproduction coverage.** The GPU training path was run only in the original Colab sessions. The CPU analysis path was
+   checked in a clean environment (below).
+7. **Known cosmetic defect.** In `results/main_summary.json`, the `direction` text for the descriptive C-vs-B comparison
+   says "higher error than A" where it should say "than B". The numbers are correct. The file is part of the frozen
+   analysis code path and was left unchanged.
+
+## 7. Verification status
+
+| Claim | Status | Evidence |
+|---|---|---|
+| Nine GPU runs completed, 0 failed, 1 segment, 1 GPU | Verified from committed raw files | `results/main_summary.json` (ledger, session) |
+| Table in section 2 matches raw runs | Recomputed independently during Week 8 packaging (mean and sample SD of `main_runs.csv`) | Matches `main_summary.json` |
+| Frozen files unchanged | Re-executed 2026-10-29 on a fresh clone of this branch (commit `2a0da64`): `python src/freeze.py --verify` reported "freeze holds: 13 files match" | Command output, not a stored record |
+| Analysis regenerates from saved runs | Re-executed 2026-10-29 on the same clone: `python src/analyze_main.py` output equals the committed `main_summary.json` except the `created_utc` line; `main_runs.csv` and `paired_differences.csv` are byte-identical | Command output |
+| Figures, dataset regeneration and 124 tests (clean environment, CPU) | Recorded by the author in an earlier session on a fresh clone. Not re-executed during Week 8 packaging | Author's notes, section 4 |
+| GPU re-run from a clean Colab | Not performed after the original session | Run `colab/week7_step6_main.ipynb` to verify |
+
+## 8. Repository layout
 
 ```
-configs/    base.yaml (everything fixed, includes analysis delta and k) and arm_{A,B,C}.yaml (one field each)
+configs/    base.yaml (all fixed settings, decision-rule δ and k) and arm_{A,B,C}.yaml (one field each)
 src/        make_data.py, model.py, run_ablation.py, run_main.py, analyze_main.py, freeze.py, check_env.py   (frozen)
-            make_figures.py, choose_policy.py, smoke_checks.py, calibrate.py, run_calibration.py, run_pilot.py,
-            analyze_pilot.py                                                                               (not frozen)
-tests/      CPU tests for the code above
-colab/      one notebook per stage
-results/    runs/{calibration,pilot,main}/ per-run JSON, main_summary.json, main_runs.csv, paired_differences.csv,
-            freeze_record.json, determinism_decision.json, session_manifest.json, per-session provenance folders
-figures/    fig1 seed-level MAPE, fig2 matched differences, fig3 cost, figure_manifest.json, README.md
-docs/       Annex IV-style technical documentation
-data/       generated series (not committed; make_data.py regenerates it, hash 65d899e6...)
+            make_figures.py, choose_policy.py, smoke_checks.py, calibrate.py, run_calibration.py,
+            run_pilot.py, analyze_pilot.py                                                                   (not frozen)
+tests/      CPU tests: data and leakage, model, run gates, calibration, analysis rule, freeze record
+colab/      One notebook per stage (smoke, calibration, noise pilot, main)
+results/    runs/{calibration,pilot,main}/ per-run JSON; main_runs.csv; paired_differences.csv; main_summary.json;
+            freeze_record.json; determinism_decision.json; session_manifest.json; per-session provenance
+figures/    fig1 seed-level MAPE, fig2 matched differences, fig3 cost, figure_manifest.json
+docs/       ANNEX_IV (EU AI Act Annex IV-style technical documentation); history/ holds the planning log
+PREREGISTRATION.md   Question, hypotheses, metric and decision rule, frozen before the main runs
 ```
 
-Planning and record-keeping documents: `REQUIREMENTS.md`, `EXPERIMENT_PLAN.md` (the running log, including every
-decision and deviation), `PREREGISTRATION.md` (frozen before the main runs).
+`docs/history/EXPERIMENT_PLAN.md` is the running log of every decision and deviation, including the diagnosis of a
+failed memory check during smoke testing (Section 21.3). `docs/history/COURSE_REQUIREMENTS.md` is the original
+requirements document, kept for the record. Text in the frozen files (`PREREGISTRATION.md`, `src/run_main.py`) that mentions
+`EXPERIMENT_PLAN.md` refers to this moved file; those files were not edited, to keep the freeze intact.
 
-## How the design is kept honest
+## 9. Why This Matters Here
 
-- **Pre-registration.** `PREREGISTRATION.md` and 12 other files are hashed in `results/freeze_record.json`. The main
-  driver refuses to run unless the freeze record verifies and its frozen commit is an ancestor of the current commit.
-  `python src/freeze.py --verify` shows that nothing frozen changed after the main runs.
-- **Matched seeds.** The shared backbone is initialised from the seed, the positional module from `seed + 10000`, and
-  training is reseeded from `seed + 20000`, so arms start from identical shared weights.
-- **Decision rule.** For each comparison with arm A, d_s = MAPE(X, s) - MAPE(A, s). A tentative call needs all three
-  signs equal, |mean| >= 0.10, |mean| >= 2 x SD of d, and every leave-one-out mean still beyond 0.10 in the same
-  direction. These are exploratory screening criteria for three seeds, not significance tests. Three same-sign
-  differences occur by chance 25% of the time.
-- **Policy P1.** Deterministic algorithms, fixed cuBLAS workspace, deterministic cuDNN, math attention backend. It was
-  chosen on feasibility alone (time budget), not on how it affected any result.
-- **No tuning per arm, no early stopping, final-step weights only.**
-- **Provenance in every run file.** Commit, GPU UUID, session id, policy, config hash, data hash and weight hashes.
+This is written with SPS Commerce and an AI Enablement / AI Operations direction in mind. It was **not** deployed at SPS
+Commerce and was **not** evaluated on company data. What it shows is the habit of evaluation that should come before any
+AI solution enters an operational workflow:
 
-## Known limitations
+- **Reliability.** Accuracy is reported per seed with spread, against simple baselines, and the study states when it
+  cannot tell options apart instead of declaring a winner. A "no detectable difference" result is treated as a valid
+  finding that saves a team from an unnecessary change.
+- **Measured performance.** Latency, throughput, training time and memory were measured with synchronised timers, warm-up
+  calls and fixed protocols, not estimated. These are the numbers an operations owner needs to decide whether a model
+  fits a service-level target.
+- **Resource constraints.** The whole study fits a free-tier T4 in under an hour of training. Step budget and
+  determinism policy were chosen against an explicit compute ceiling (3.0 GPU-hours planned), with the rule written
+  down before the results existed.
+- **Documented limitations.** Seven limitations are stated with their consequence for how far the result can be trusted,
+  plus an Annex IV-style document mapping the work to EU AI Act technical-documentation headings. That is the kind of
+  evidence a governance or risk reviewer asks for.
 
-- Three seeds per arm. The data is synthetic and the model small (about 150,000 parameters). The step budget (8000) was
-  chosen by a pre-declared fallback rule and the model was not trained to convergence.
-- One GPU model and one session. Cost results are specific to that setup and to the deterministic kernels.
-- The optional two-seed extension (seeds 3 and 4) was not run. That decision was made after the nine runs were reviewed,
-  and the three-seed results are the primary evidence.
-- The arm A pilot SD (0.0073) was lower than the SD across the three main arm A seeds (0.0329). The pilot SD was not used
-  to change delta.
-- Local test environments here use newer library versions than the lock, so tests on CPU do not reproduce the
-  GPU-session numbers. Only the Colab session did.
+## 10. Skills Demonstrated
 
-## What was tested in a clean environment
+| Competency | Evidence in this repository |
+|---|---|
+| Model implementation | `src/model.py` implements the Transformer and three positional encodings from scratch; `tests/test_model.py` |
+| Reproducibility | `requirements.lock.txt`, `src/check_env.py`, `src/freeze.py` and `results/freeze_record.json`, matched seeds, data and weight hashes in every run file, one-command analysis from raw runs |
+| Benchmarking | `src/run_ablation.py` measurement protocol (config `measure:` block), `results/main_runs.csv`, baselines in every run file |
+| Experimental design and statistics | `PREREGISTRATION.md`, `src/analyze_main.py`, paired per-seed differences, leave-one-out check |
+| Failure diagnosis | `docs/history/EXPERIMENT_PLAN.md` Section 21.3 (memory check diagnosed), calibration non-convergence recorded in `results/calibration_decision.json`, pilot-versus-main SD discrepancy disclosed |
+| Compute budgeting | `results/determinism_decision.json` (projected GPU hours per policy against a ceiling), `results/calibration_decision.json` (step budget), nine runs in 49 minutes on a free-tier T4 |
+| Responsible AI documentation | `docs/ANNEX_IV.pdf` and `.docx`, sections 5 and 6 of this README, `PREREGISTRATION.md` |
 
-Fresh clone of branch `claude/trusting-pascal-1qjsp0`, fresh virtual environment, Python 3.13, CPU only, following the
-commands above:
+## License and contact
 
-- Section 1 (no GPU): `freeze.py --verify` reports 13 files match. `analyze_main.py` output equals the committed
-  `main_summary.json` except for the `created_utc` line. `make_figures.py` reproduces the PNGs byte for byte; the SVGs
-  and `figure_manifest.json` differ only in metadata such as the creation time.
-- Section 2 (`torch==2.11.0`, `numpy==2.1.3`, `PyYAML==6.0.3`): `make_data.py --verify` regenerates the dataset with
-  hash `65d899e6...` and passes the leakage check. 124 tests pass (about 9.5 minutes).
-- `check_env.py --verify` reports one difference from the lock: torch installs as `2.11.0` from PyPI, the lock says
-  `2.11.0+cu130`. Real runs need the lock to match, as stated above.
-
-Not tested outside the original session: the GPU training path (the nine runs and the Colab notebooks), because no GPU was
-available for the clean check.
+Author: Stephen Weiss. The repository is public and has no license file yet, so no reuse rights are granted beyond viewing.
