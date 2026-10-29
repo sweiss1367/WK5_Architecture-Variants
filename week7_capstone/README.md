@@ -102,15 +102,16 @@ Training uses Python 3.13 and the pinned versions in `requirements.lock.txt` (`t
 ### From a clean environment, no GPU (about 2 minutes)
 
 ```bash
-git clone https://github.com/sweiss1367/wk5_architecture-variants.git
+# -b selects the submission branch (the repository default branch may not contain week7_capstone)
+git clone -b claude/trusting-pascal-1qjsp0 https://github.com/sweiss1367/wk5_architecture-variants.git
 cd wk5_architecture-variants/week7_capstone
-git checkout claude/trusting-pascal-1qjsp0
 python3 -m venv .venv && . .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements-figures.txt
 python src/freeze.py --verify          # expect: freeze holds: 13 files match
 python src/analyze_main.py             # rewrites results/main_summary.json, main_runs.csv, paired_differences.csv
 git diff --stat results                # expect only the created_utc line to differ
-python src/make_figures.py             # writes figures/*.png, *.svg, figure_manifest.json
+python src/make_figures.py             # writes figures/*.png, *.svg, figure_manifest.json; PNGs match byte for byte,
+                                       # SVGs and the manifest differ in metadata (creation time)
 ```
 
 `analyze_main.py` reads only the nine files in `results/runs/main/` and `configs/base.yaml`.
@@ -122,6 +123,12 @@ pip install torch==2.11.0 numpy==2.1.3 PyYAML==6.0.3 pytest
 python src/check_env.py --verify       # lists exactly what differs from the lock
 python -m pytest tests -q
 ```
+
+`check_env.py --verify` also writes an untracked `results/pip_freeze_<hash>.txt`; delete it or ignore it.
+
+On Colab the pinned `torch==2.11.0+cu130` build is already installed, and the notebook's gate cell stops the run if the
+environment differs from the lock. Outside Colab, install the `+cu130` build of torch from PyTorch's CUDA 13.0 wheel
+index; it is not on PyPI, so `pip install -r requirements.lock.txt` alone will not find it (not tested here).
 
 A real training run refuses to start if the environment differs from the lock. On a CPU machine, `check_env.py --verify`
 reporting the `+cu130` build difference is expected.
@@ -185,7 +192,9 @@ latencies will differ on other hardware.
 | Table in section 2 matches raw runs | Recomputed independently during Week 8 packaging (mean and sample SD of `main_runs.csv`) | Matches `main_summary.json` |
 | Frozen files unchanged | Re-executed 2026-10-29 on a fresh clone of this branch (commit `2a0da64`): `python src/freeze.py --verify` reported "freeze holds: 13 files match" | Command output, not a stored record |
 | Analysis regenerates from saved runs | Re-executed 2026-10-29 on the same clone: `python src/analyze_main.py` output equals the committed `main_summary.json` except the `created_utc` line; `main_runs.csv` and `paired_differences.csv` are byte-identical | Command output |
-| Figures, dataset regeneration and 124 tests (clean environment, CPU) | Recorded by the author in an earlier session on a fresh clone. Not re-executed during Week 8 packaging | Author's notes, section 4 |
+| Figures and dataset regeneration (clean environment, CPU) | Re-executed 2026-10-29 in a fresh clone and venv (Python 3.13.17, `requirements-figures.txt`, numpy 2.5.4): `make_figures.py` PNGs are byte-identical to the committed ones, SVGs and `figure_manifest.json` differ only in metadata; `make_data.py --verify` reports the regenerated hash matches and the leakage check passed | Command output |
+| 124 tests (CPU) | Recorded by the author in an earlier session on a fresh clone. Not re-executed during Week 8 packaging | Author's notes, section 4 |
+| Same-seed repeat gives identical weights | One arm A run (seed 901) was repeated in the same Colab session on the same GPU and produced the same final-weights hash and validation MAPE. The determinism check also gave identical weights across repeated P1 runs. This is a repeat on one GPU in one session, not an independent reproduction | `results/pilot_repeat_901_f9437a5/`, `docs/history/EXPERIMENT_PLAN.md` Section 21.2 |
 | GPU re-run from a clean Colab | Not performed after the original session | Run `colab/week7_step6_main.ipynb` to verify |
 
 ## 8. Repository layout
